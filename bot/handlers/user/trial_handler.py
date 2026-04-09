@@ -109,18 +109,29 @@ async def request_trial_confirmation_handler(
             if traffic_gb_val and traffic_gb_val > 0
             else _("traffic_unlimited")
         )
-
-        final_message_text_in_chat = _(
-            "trial_activated_details_message",
-            days=activation_result.get("days", settings.TRIAL_DURATION_DAYS),
-            end_date=(
-                end_date_obj.strftime("%Y-%m-%d")
-                if isinstance(end_date_obj, datetime)
-                else "N/A"
-            ),
-            config_link=config_link_for_trial,
-            traffic_gb=traffic_display,
+        traffic_limit_strategy = activation_result.get(
+            "traffic_limit_strategy", settings.TRIAL_TRAFFIC_LIMIT_STRATEGY
         )
+
+        if traffic_limit_strategy == "NO_RESET":
+            final_message_text_in_chat = _(
+                "trial_activated_details_message",
+                days=activation_result.get("days", settings.TRIAL_DURATION_DAYS),
+                end_date=(
+                    end_date_obj.strftime("%Y-%m-%d")
+                    if isinstance(end_date_obj, datetime)
+                    else "N/A"
+                ),
+                traffic_gb=traffic_display,
+                config_link=config_link_for_trial,
+            )
+        else:
+            final_message_text_in_chat = _(
+                "trial_activated_details_message_no_reset",
+                traffic_gb=traffic_display,
+                traffic_limit_strategy=_(traffic_limit_strategy.lower()),
+                config_link=config_link_for_trial,
+            )
 
         # Send notification to admin about new trial
         notification_service = NotificationService(callback.bot, settings, i18n)
