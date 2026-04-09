@@ -41,11 +41,6 @@ async def request_trial_confirmation_handler(
             )
         return
 
-    show_trial_btn_in_menu_if_fail = False
-    if settings.TRIAL_ENABLED:
-        if not await subscription_service.has_active_subscription(session, user_id):
-            show_trial_btn_in_menu_if_fail = True
-
     if not settings.TRIAL_ENABLED:
         await callback.message.edit_text(
             _("trial_feature_disabled"),
@@ -156,9 +151,7 @@ async def request_trial_confirmation_handler(
             )
         if (
             settings.TRIAL_ENABLED
-            and not await subscription_service.has_had_any_subscription(
-                session, user_id
-            )
+            and not await subscription_service.has_active_subscription(session, user_id)
         ):
             show_trial_button_after_action = True
 
