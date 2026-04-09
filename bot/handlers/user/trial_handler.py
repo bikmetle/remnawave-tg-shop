@@ -226,7 +226,7 @@ async def confirm_activate_trial_handler(
             callback, settings, i18n_data, subscription_service, session, is_edit=True
         )
         return
-    if await subscription_service.has_had_any_subscription(session, user_id):
+    if await subscription_service.has_active_subscription(session, user_id):
         try:
             await callback.answer(
                 _("trial_already_had_subscription_or_trial"), show_alert=True

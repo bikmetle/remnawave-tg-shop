@@ -86,7 +86,7 @@
   "error_applying_promo_discount": "❌ Ошибка при активации промокода. Попробуйте позже.",
   "promo_input_cancelled_short": "Ввод промокода отменен.",
   "trial_feature_disabled": "Пробный период в данный момент недоступен.",
-  "trial_already_had_subscription_or_trial": "Вы уже использовали пробный период или у вас была платная подписка. Пробный период доступен только один раз для новых пользователей.",
+  "trial_already_had_subscription_or_trial": "Пробный период не доступен ещё. Пожалуйста, подождите.",
   "trial_confirm_activate_button": "✅ Активировать!",
   "trial_activated_alert": "Пробный период активирован!",
   "trial_activated_details_message": "✅ Пробный доступ активирован!\nВаш триал на {days} дн. действует до {end_date}.\n\nКлюч подключения:\n<code>{config_link}</code>\n\nЧтобы подключиться, перейдите по ссылке и следуйте инструкции 👇",
