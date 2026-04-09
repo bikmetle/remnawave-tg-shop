@@ -110,7 +110,7 @@ async def request_trial_confirmation_handler(
             else _("traffic_unlimited")
         )
         traffic_limit_strategy = activation_result.get(
-            "traffic_limit_strategy", settings.TRIAL_TRAFFIC_LIMIT_STRATEGY
+            "traffic_limit_strategy", settings.TRIAL_TRAFFIC_STRATEGY
         )
 
         if traffic_limit_strategy == "NO_RESET":
@@ -290,7 +290,7 @@ async def confirm_activate_trial_handler(
         )
 
         traffic_limit_strategy = activation_result.get(
-            "traffic_limit_strategy", settings.TRIAL_TRAFFIC_LIMIT_STRATEGY
+            "traffic_limit_strategy", settings.TRIAL_TRAFFIC_STRATEGY
         )
         if traffic_limit_strategy == "NO_RESET":
             final_message_text_in_chat = _(
