@@ -89,7 +89,8 @@
   "trial_already_had_subscription_or_trial": "Пробный период не доступен ещё. Пожалуйста, подождите.",
   "trial_confirm_activate_button": "✅ Активировать!",
   "trial_activated_alert": "Пробный период активирован!",
-  "trial_activated_details_message": "✅ Пробный доступ активирован!\nВаш триал на {days} дн. действует до {end_date}.\n\nКлюч подключения:\n<code>{config_link}</code>\n\nЧтобы подключиться, перейдите по ссылке и следуйте инструкции 👇",
+  "trial_activated_details_message": "✅ Пробный доступ активирован!\nВаш триал на {days} дн. действует до {end_date}. Вам предоставлено {traffic_gb} ГБ.\n\nКлюч подключения:\n<code>{config_link}</code>\n\nЧтобы подключиться, перейдите по ссылке и следуйте инструкции 👇",
+  "trial_activated_details_message_no_reset": "✅ Пробный доступ активирован!\nВаш предоствленно {traffic_gb} ГБ каждый(ую) {traffic_limit_strategy}.\n\nКлюч подключения:\n<code>{config_link}</code>\n\nЧтобы подключиться, перейдите по ссылке и следуйте инструкции 👇",
   "yes_button": "Да",
   "no_button": "Нет",
   "referral_program_info_new": "🎁 <b>Реферальная программа</b>\n\n📊 <b>Твоя статистика:</b>\n👥 Приглашено друзей: <b>{invited_count}</b>\n💳 Купили подписку: <b>{purchased_count}</b>\n\n🔗 Твоя ссылка:\n<code>{referral_link}</code>\n\n💰 <b>Бонусы за приглашения:</b>\n{bonus_details}\n\n📢 Поделись ссылкой с друзьями и получай бонусы!",
@@ -520,5 +521,8 @@
   "no_bonus_placeholder": "нет",
   "payment_successful_with_promo_full": "✅ Оплата прошла успешно!\nВаша подписка на {months} мес. продлена на {bonus_days} бонусных дней по промокоду и активна до {end_date}.\n\nКлюч подключения:\n<code>{config_link}</code>\n\nЧтобы подключиться, перейдите по ссылке и следуйте инструкции 👇",
   "system_or_unknown_user": "Система/неизвестный пользователь",
-  "free_kassa_order_full": "Заказ №{order_id} от {date}\n\n"
+  "free_kassa_order_full": "Заказ №{order_id} от {date}\n\n",
+  "day": "день",
+  "week": "неделю",
+  "month": "месяц"
 }
