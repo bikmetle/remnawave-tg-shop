@@ -471,7 +471,7 @@ async def create_promo_code_final(callback_or_message,
         await session.commit()
 
         # Log successful creation
-        logging.info(f"Promo code '{data['promo_code']}' ({promo_type}) created with ID {created_promo.promo_code_id}")
+        logging.warning(f"Promo code '{data['promo_code']}' ({promo_type}) created with ID {created_promo.promo_code_id}")
 
         # Success message
         valid_until_str = _("admin_promo_unlimited") if not data.get("validity_days") else f"{data['validity_days']} дней"

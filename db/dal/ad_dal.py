@@ -19,7 +19,7 @@ async def create_campaign(
     session.add(campaign)
     await session.flush()
     await session.refresh(campaign)
-    logging.info(
+    logging.warning(
         f"AdCampaign created id={campaign.ad_campaign_id}, source={source}, start={start_param}, cost={cost}"
     )
     return campaign
@@ -64,7 +64,7 @@ async def ensure_attribution(session: AsyncSession, *, user_id: int, campaign_id
     session.add(attrib)
     await session.flush()
     await session.refresh(attrib)
-    logging.info(f"AdAttribution created for user {user_id} -> campaign {campaign_id}")
+    logging.warning(f"AdAttribution created for user {user_id} -> campaign {campaign_id}")
     return attrib
 
 
@@ -199,7 +199,7 @@ async def delete_campaign(session: AsyncSession, campaign_id: int) -> bool:
             return False
         await session.delete(campaign)
         await session.flush()
-        logging.info(f"AdCampaign deleted id={campaign_id}")
+        logging.warning(f"AdCampaign deleted id={campaign_id}")
         return True
     except Exception as e:
         logging.error(f"Failed to delete AdCampaign id={campaign_id}: {e}", exc_info=True)

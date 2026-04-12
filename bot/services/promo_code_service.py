@@ -43,7 +43,7 @@ class PromoCodeService:
             self._discount_expiration_loop(),
             name="PromoDiscountExpirationLoop",
         )
-        logging.info("PromoCodeService: started discount expiration background worker.")
+        logging.warning("PromoCodeService: started discount expiration background worker.")
 
     async def close(self) -> None:
         """Gracefully stop background workers."""
@@ -69,7 +69,7 @@ class PromoCodeService:
 
                 await self._process_expired_discounts_once()
             except asyncio.CancelledError:
-                logging.info("PromoCodeService: discount expiration loop cancelled.")
+                logging.warning("PromoCodeService: discount expiration loop cancelled.")
                 raise
             except Exception:
                 logging.exception("PromoCodeService: unhandled error in discount expiration loop")
@@ -120,7 +120,7 @@ class PromoCodeService:
 
                 notifications_to_send.append((expired.user_id, message_text))
 
-                logging.info(
+                logging.warning(
                     "Expired discount reservation removed: user=%s, promo=%s",
                     expired.user_id,
                     expired.promo_code_id,
@@ -292,7 +292,7 @@ class PromoCodeService:
             )
             return False, _("promo_code_not_found_or_not_discount", code=code_input_upper)
 
-        logging.info(
+        logging.warning(
             f"Discount promo code {code_input_upper} activated for user {user_id}: "
             f"{promo_data.discount_percentage}% off until {expires_at.isoformat()}"
         )
@@ -341,7 +341,7 @@ class PromoCodeService:
         # Check if promo code has expired
         if promo.valid_until and promo.valid_until <= datetime.now(timezone.utc):
             # Promo code expired - clear the discount
-            logging.info(
+            logging.warning(
                 f"Promo code {promo.code} expired (valid_until: {promo.valid_until}). "
                 f"Clearing active discount for user {user_id}"
             )
@@ -416,7 +416,7 @@ class PromoCodeService:
                     session, promo_code_id, user_id, payment_id
                 )
                 if updated_payment:
-                    logging.info(
+                    logging.warning(
                         "Linked discount promo %s activation to payment %s for user %s.",
                         promo_code_id,
                         payment_id,
@@ -452,13 +452,13 @@ class PromoCodeService:
                 promo_code_id=promo_code_id,
             )
         elif active_discount and active_discount.promo_code_id != promo_code_id:
-            logging.info(
+            logging.warning(
                 "Active discount promo %s differs from payment promo %s during consumption.",
                 active_discount.promo_code_id,
                 promo_code_id,
             )
         else:
-            logging.info(
+            logging.warning(
                 "Discount reservation already absent at consumption time (user=%s, promo=%s, payment=%s)",
                 user_id,
                 promo_code_id,
@@ -475,7 +475,7 @@ class PromoCodeService:
             )
 
         await session.flush()
-        logging.info(
+        logging.warning(
             "Discount consumed for user %s, promo %s, payment %s",
             user_id,
             promo_code_id,

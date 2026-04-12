@@ -53,7 +53,7 @@ async def build_and_start_web_app(
                 secret_token=telegram_webhook_secret,
             ),
         )
-        logging.info(
+        logging.warning(
             "Telegram webhook route configured at: [POST] %s (secret_token=%s)",
             telegram_webhook_path,
             "set" if telegram_webhook_secret else "not_set",
@@ -69,33 +69,33 @@ async def build_and_start_web_app(
     cp_path = settings.cryptopay_webhook_path
     if cp_path.startswith("/"):
         app.router.add_post(cp_path, cryptopay_webhook_route)
-        logging.info("CryptoPay webhook route configured at: [POST] %s", cp_path)
+        logging.warning("CryptoPay webhook route configured at: [POST] %s", cp_path)
 
     fk_path = settings.freekassa_webhook_path
     if fk_path.startswith("/"):
         app.router.add_post(fk_path, freekassa_webhook_route)
-        logging.info(f"FreeKassa webhook route configured at: [POST] {fk_path}")
+        logging.warning(f"FreeKassa webhook route configured at: [POST] {fk_path}")
 
     pg_path = settings.platega_webhook_path
     if pg_path.startswith("/"):
         app.router.add_post(pg_path, platega_webhook_route)
-        logging.info(f"Platega webhook route configured at: [POST] {pg_path}")
+        logging.warning(f"Platega webhook route configured at: [POST] {pg_path}")
 
     sp_path = settings.severpay_webhook_path
     if sp_path.startswith("/"):
         app.router.add_post(sp_path, severpay_webhook_route)
-        logging.info(f"SeverPay webhook route configured at: [POST] {sp_path}")
+        logging.warning(f"SeverPay webhook route configured at: [POST] {sp_path}")
 
     # YooKassa webhook (register only when base URL present and path configured)
     yk_path = settings.yookassa_webhook_path
     if settings.WEBHOOK_BASE_URL and yk_path and yk_path.startswith("/"):
         app.router.add_post(yk_path, yookassa_webhook_route)
-        logging.info(f"YooKassa webhook route configured at: [POST] {yk_path}")
+        logging.warning(f"YooKassa webhook route configured at: [POST] {yk_path}")
 
     panel_path = settings.panel_webhook_path
     if panel_path.startswith("/"):
         app.router.add_post(panel_path, panel_webhook_route)
-        logging.info(f"Panel webhook route configured at: [POST] {panel_path}")
+        logging.warning(f"Panel webhook route configured at: [POST] {panel_path}")
 
     web_app_runner = web.AppRunner(app)
     await web_app_runner.setup()
@@ -106,7 +106,7 @@ async def build_and_start_web_app(
     )
 
     await site.start()
-    logging.info(
+    logging.warning(
         f"AIOHTTP server started on http://{settings.WEB_SERVER_HOST}:{settings.WEB_SERVER_PORT}"
     )
 

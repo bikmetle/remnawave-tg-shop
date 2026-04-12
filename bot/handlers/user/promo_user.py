@@ -60,7 +60,7 @@ async def prompt_promo_code_input(callback: types.CallbackQuery,
 
     await callback.answer()
     await state.set_state(UserPromoStates.waiting_for_promo_code)
-    logging.info(
+    logging.warning(
         f"User {callback.from_user.id} entered state UserPromoStates.waiting_for_promo_code. "
         f"FSM state: {await state.get_state()}")
 
@@ -71,7 +71,7 @@ async def process_promo_code_input(message: types.Message, state: FSMContext,
                                    promo_code_service: PromoCodeService,
                                    subscription_service: SubscriptionService,
                                    bot: Bot, session: AsyncSession):
-    logging.info(
+    logging.warning(
         f"Processing promo code input from user {message.from_user.id} in state {await state.get_state()}: '{message.text}'"
     )
 
@@ -130,7 +130,7 @@ async def process_promo_code_input(message: types.Message, state: FSMContext,
         if success:
             # Bonus code success
             await session.commit()
-            logging.info(
+            logging.warning(
                 f"Bonus promo code '{code_input}' successfully applied for user {user.id}."
             )
 
@@ -161,7 +161,7 @@ async def process_promo_code_input(message: types.Message, state: FSMContext,
             if success_discount:
                 # Discount code success
                 await session.commit()
-                logging.info(
+                logging.warning(
                     f"Discount promo code '{code_input}' successfully applied for user {user.id}."
                 )
                 discount_pct = result_discount  # Returns percentage
@@ -189,7 +189,7 @@ async def process_promo_code_input(message: types.Message, state: FSMContext,
             else:
                 # Both failed
                 await session.rollback()
-                logging.info(
+                logging.warning(
                     f"Promo code '{code_input}' application failed for user {user.id}. "
                     f"Bonus reason: {result}. Discount reason: {result_discount}"
                 )
@@ -213,7 +213,7 @@ async def process_promo_code_input(message: types.Message, state: FSMContext,
         parse_mode="HTML",
     )
     await state.clear()
-    logging.info(
+    logging.warning(
         f"Promo code input '{code_input}' processing finished for user {message.from_user.id}. State cleared."
     )
 
@@ -231,7 +231,7 @@ async def cancel_promo_input_via_button(
         await callback.answer("Language error", show_alert=True)
         return
 
-    logging.info(
+    logging.warning(
         f"User {callback.from_user.id} cancelled promo code input via button from state {await state.get_state()}. Clearing state."
     )
     await state.clear()

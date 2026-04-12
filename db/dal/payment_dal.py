@@ -32,7 +32,7 @@ async def create_payment_record(session: AsyncSession,
     session.add(new_payment)
     await session.flush()
     await session.refresh(new_payment)
-    logging.info(
+    logging.warning(
         f"Payment record {new_payment.payment_id} created for user {new_payment.user_id}"
     )
     return new_payment
@@ -102,7 +102,7 @@ async def update_payment_status_by_db_id(
             payment.yookassa_payment_id = yk_payment_id
         await session.flush()
         await session.refresh(payment)
-        logging.info(
+        logging.warning(
             f"Payment record {payment.payment_id} status updated to {new_status}."
         )
     else:
@@ -166,7 +166,7 @@ async def update_provider_payment_and_status(
         payment.updated_at = func.now()
         await session.flush()
         await session.refresh(payment)
-        logging.info(
+        logging.warning(
             f"Payment record {payment.payment_id} updated with provider id {provider_payment_id} and status {new_status}."
         )
     else:
@@ -200,7 +200,7 @@ async def mark_provider_payment_succeeded_once(
     result = await session.execute(stmt)
     updated = (result.rowcount or 0) > 0
     if updated:
-        logging.info(
+        logging.warning(
             "Payment record %s atomically marked as succeeded (provider id %s).",
             payment_db_id,
             provider_payment_id,
@@ -246,7 +246,7 @@ async def mark_provider_payment_processing_once(
     result = await session.execute(stmt)
     updated = (result.rowcount or 0) > 0
     if updated:
-        logging.info(
+        logging.warning(
             "Payment record %s atomically marked as processing (provider id %s).",
             payment_db_id,
             provider_payment_id,
@@ -281,7 +281,7 @@ async def rollback_provider_payment_processing(
     result = await session.execute(stmt)
     updated = (result.rowcount or 0) > 0
     if updated:
-        logging.info(
+        logging.warning(
             "Payment record %s rolled back from processing to %s.",
             payment_db_id,
             rollback_status,
@@ -304,7 +304,7 @@ async def update_payment_discount_info(
         payment.updated_at = func.now()
         await session.flush()
         await session.refresh(payment)
-        logging.info(
+        logging.warning(
             f"Payment record {payment.payment_id} updated with discount info: "
             f"original {original_amount}, discount {discount_applied}, promo {promo_code_id}"
         )

@@ -19,7 +19,7 @@ class JsonI18n:
         self.default_lang = default
         self.locales_data: Dict[str, Dict[str, str]] = {}
         self._load_locales()
-        logging.info(
+        logging.warning(
             f"JsonI18n initialized. Loaded languages: {list(self.locales_data.keys())}. Default: {self.default_lang}"
         )
 

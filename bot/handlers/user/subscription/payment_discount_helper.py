@@ -32,7 +32,7 @@ async def apply_discount_to_payment(
         original_price, active_discount.discount_percentage
     )
 
-    logging.info(
+    logging.warning(
         f"Applying {active_discount.discount_percentage}% discount to payment for user {user_id}: "
         f"{original_price} -> {final_price}"
     )

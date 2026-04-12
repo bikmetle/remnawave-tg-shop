@@ -14,7 +14,7 @@ async def create_promo_code(session: AsyncSession,
     session.add(new_promo)
     await session.flush()
     await session.refresh(new_promo)
-    logging.info(
+    logging.warning(
         f"Promo code '{new_promo.code}' created with ID {new_promo.promo_code_id}"
     )
     return new_promo
@@ -154,7 +154,7 @@ async def delete_promo_code(session: AsyncSession, promo_id: int) -> Optional[Pr
     await session.delete(promo)
     await session.flush()
 
-    logging.info(f"Promo code '{promo.code}' (ID: {promo_id}) deleted successfully")
+    logging.warning(f"Promo code '{promo.code}' (ID: {promo_id}) deleted successfully")
     return promo
 
 
@@ -222,7 +222,7 @@ async def record_promo_activation(
     existing_activation = await get_user_activation_for_promo(
         session, promo_code_id, user_id)
     if existing_activation:
-        logging.info(
+        logging.warning(
             f"User {user_id} has already activated promo code {promo_code_id}. Activation ID: {existing_activation.activation_id}"
         )
         return existing_activation
@@ -255,7 +255,7 @@ async def record_promo_activation(
     session.add(new_activation)
     await session.flush()
     await session.refresh(new_activation)
-    logging.info(
+    logging.warning(
         f"Promo code {promo_code_id} activated by user {user_id}. Activation ID: {new_activation.activation_id}"
     )
     return new_activation

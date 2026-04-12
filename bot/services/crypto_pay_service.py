@@ -53,7 +53,7 @@ class CryptoPayService:
         if self.client:
             try:
                 await self.client.close()
-                logging.info("CryptoPay client session closed.")
+                logging.warning("CryptoPay client session closed.")
             except Exception as e:
                 logging.warning(f"Failed to close CryptoPay client: {e}")
 
@@ -94,7 +94,7 @@ class CryptoPayService:
                     if fallback_original is not None:
                         original_amount = fallback_original
                         discount_amount = original_amount - amount
-                        logging.info(
+                        logging.warning(
                             f"Recording {discount_pct}% discount for CryptoPay payment: "
                             f"original {original_amount:.2f} -> final {amount}"
                         )
@@ -107,7 +107,7 @@ class CryptoPayService:
                 else:
                     original_amount = amount / denominator
                     discount_amount = original_amount - amount
-                    logging.info(
+                    logging.warning(
                         f"Recording {discount_pct}% discount for CryptoPay payment: "
                         f"original {original_amount:.2f} -> final {amount}"
                     )
@@ -234,7 +234,7 @@ class CryptoPayService:
                     return
 
                 if payment_record.status == "succeeded":
-                    logging.info("CryptoPay webhook: payment %s already succeeded", payment_db_id)
+                    logging.warning("CryptoPay webhook: payment %s already succeeded", payment_db_id)
                     return
 
                 try:
@@ -262,7 +262,7 @@ class CryptoPayService:
                     str(invoice.invoice_id),
                 )
                 if not marked:
-                    logging.info(
+                    logging.warning(
                         "CryptoPay webhook: payment %s already processed atomically",
                         payment_db_id,
                     )

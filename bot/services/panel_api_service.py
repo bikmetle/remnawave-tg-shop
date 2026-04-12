@@ -137,11 +137,11 @@ class PanelApiService:
                         pretty_response_text = json.dumps(parsed_json_for_log,
                                                           indent=2,
                                                           ensure_ascii=False)
-                        logging.info(
+                        logging.warning(
                             f"{log_prefix} {log_suffix} | Full Response Body:\n{pretty_response_text}"
                         )
                     except json.JSONDecodeError:
-                        logging.info(
+                        logging.warning(
                             f"{log_prefix} {log_suffix} | Full Response Text (not JSON):\n{response_text[:2000]}{'...' if len(response_text) > 2000 else ''}"
                         )
                 else:
@@ -247,7 +247,7 @@ class PanelApiService:
             if len(users_batch) < page_size: break
             start_offset += page_size
             await asyncio.sleep(0.1)
-        logging.info(f"Fetched {len(all_users)} users from panel API.")
+        logging.warning(f"Fetched {len(all_users)} users from panel API.")
         return all_users
 
     async def get_user_by_uuid(
@@ -308,7 +308,7 @@ class PanelApiService:
                         response_data["response"], list):
                 return response_data["response"]
             elif response_data and response_data.get("errorCode") == "A062":
-                logging.info(
+                logging.warning(
                     f"Panel API: Users not found for {filter_used_log}")
                 return []
 
@@ -324,7 +324,7 @@ class PanelApiService:
                         response_data["response"], dict):
                 return [response_data["response"]]
             elif response_data and response_data.get("errorCode") == "A062":
-                logging.info(
+                logging.warning(
                     f"Panel API: User not found for {filter_used_log}")
                 return []
 
@@ -340,7 +340,7 @@ class PanelApiService:
                         response_data["response"], list):
                 return response_data["response"]
             elif response_data and response_data.get("errorCode") == "A062":
-                logging.info(
+                logging.warning(
                     f"Panel API: Users not found for {filter_used_log}")
                 return []
 
@@ -423,7 +423,7 @@ class PanelApiService:
                                        json=payload,
                                        log_full_response=log_response)
         if response and not response.get("error") and "response" in response:
-            logging.info(
+            logging.warning(
                 f"Panel user '{username_on_panel}' created successfully (UUID: {response.get('response',{}).get('uuid')})."
             )
             return response
@@ -450,7 +450,7 @@ class PanelApiService:
                                             log_full_response=log_response)
         if full_response and not full_response.get(
                 "error") and "response" in full_response:
-            logging.info(f"User {user_uuid} details updated on panel.")
+            logging.warning(f"User {user_uuid} details updated on panel.")
             return full_response.get("response")
 
         logging.error(
@@ -476,7 +476,7 @@ class PanelApiService:
             actual_status = response_data.get("response", {}).get("status")
             expected_status = "ACTIVE" if enable else "DISABLED"
             if actual_status == expected_status:
-                logging.info(
+                logging.warning(
                     f"User {user_uuid} status on panel successfully set to {action} (Actual: {actual_status})."
                 )
                 return True
@@ -510,7 +510,7 @@ class PanelApiService:
             details = response_data.get("details") or {}
             error_code = details.get("errorCode") or response_data.get("errorCode")
             if error_code in {"A062", "A040"}:
-                logging.info(
+                logging.warning(
                     f"Panel user {user_uuid} already absent (errorCode {error_code}). Treating as deleted."
                 )
                 return True
@@ -519,7 +519,7 @@ class PanelApiService:
             )
             return False
 
-        logging.info(f"Panel user {user_uuid} deleted successfully.")
+        logging.warning(f"Panel user {user_uuid} deleted successfully.")
         return True
 
     async def get_subscription_link(

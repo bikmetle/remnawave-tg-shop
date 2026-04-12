@@ -49,7 +49,7 @@ if __name__ == "__main__":
     try:
         asyncio.run(main())
     except (KeyboardInterrupt, SystemExit):
-        logging.info("Bot stopped manually")
+        logging.warning("Bot stopped manually")
     except Exception as e_global:
         logging.critical(f"Global unhandled exception in main: {e_global}",
                          exc_info=True)

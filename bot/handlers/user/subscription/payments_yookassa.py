@@ -102,7 +102,7 @@ async def _initiate_yk_payment(
                 if fallback_original is not None:
                     original_price = fallback_original
                     discount_amount = original_price - price_rub
-                    logging.info(
+                    logging.warning(
                         f"Recording {discount_pct}% discount for YooKassa payment: "
                         f"original {original_price:.2f} -> final {price_rub}"
                     )
@@ -115,7 +115,7 @@ async def _initiate_yk_payment(
             else:
                 original_price = price_rub / denominator
                 discount_amount = original_price - price_rub
-                logging.info(
+                logging.warning(
                     f"Recording {discount_pct}% discount for YooKassa payment: "
                     f"original {original_price:.2f} -> final {price_rub}"
                 )
@@ -141,7 +141,7 @@ async def _initiate_yk_payment(
     try:
         db_payment_record = await payment_dal.create_payment_record(session, payment_record_data)
         await session.commit()
-        logging.info(
+        logging.warning(
             f"Payment record {db_payment_record.payment_id} created for user {user_id} with status 'pending_yookassa'."
         )
     except Exception as e_db_payment:

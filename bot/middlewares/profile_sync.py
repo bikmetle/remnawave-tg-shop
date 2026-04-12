@@ -38,7 +38,7 @@ class ProfileSyncMiddleware(BaseMiddleware):
 
                     if update_payload:
                         await user_dal.update_user(session, tg_user.id, update_payload)
-                        logging.info(
+                        logging.warning(
                             f"ProfileSyncMiddleware: Updated user {tg_user.id} profile fields: {list(update_payload.keys())}"
                         )
 

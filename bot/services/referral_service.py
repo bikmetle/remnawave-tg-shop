@@ -65,7 +65,7 @@ class ReferralService:
                         session, referee_user_id, exclude_payment_id=current_payment_db_id
                     )
                     if succeeded_count and succeeded_count > 0:
-                        logging.info(
+                        logging.warning(
                             f"Referral bonuses skipped for user {referee_user_id}: already has {succeeded_count} succeeded payments.")
                         return {
                             "referee_bonus_applied_days": None,
@@ -79,7 +79,7 @@ class ReferralService:
             if skip_if_active_before_payment:
                 try:
                     if await self.subscription_service.has_active_subscription(session, referee_user_id):
-                        logging.info(
+                        logging.warning(
                             f"Referral bonuses skipped for user {referee_user_id}: user currently has an active subscription.")
                         return {
                             "referee_bonus_applied_days": None,
@@ -131,7 +131,7 @@ class ReferralService:
 
                         if new_end_date_inviter:
                             inviter_bonus_successfully_applied = True
-                            logging.info(
+                            logging.warning(
                                 f"Bonus of {inviter_bonus_days} days successfully applied/extended for inviter {inviter_user_id}."
                             )
 
@@ -152,7 +152,7 @@ class ReferralService:
                                 )
                         else:
 
-                            logging.info(
+                            logging.warning(
                                 f"Inviter {inviter_user_id} has no active sub to extend. Creating new bonus subscription for {inviter_bonus_days} days."
                             )
 
@@ -205,7 +205,7 @@ class ReferralService:
                                         })
                                     if panel_update_success:
                                         inviter_bonus_successfully_applied = True
-                                        logging.info(
+                                        logging.warning(
                                             f"New bonus subscription for {inviter_bonus_days} days created for inviter {inviter_user_id}."
                                         )
 
@@ -242,7 +242,7 @@ class ReferralService:
                 if new_end_date_referee:
                     referee_final_end_date = new_end_date_referee
                     referee_bonus_applied_days = referee_bonus_days
-                    logging.info(
+                    logging.warning(
                         f"Bonus of {referee_bonus_days} days successfully applied to referee {referee_user_id}."
                     )
                 else:

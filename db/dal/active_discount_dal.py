@@ -43,7 +43,7 @@ async def set_active_discount(
     session.add(new_discount)
     await session.flush()
     await session.refresh(new_discount)
-    logging.info(
+    logging.warning(
         f"Active discount set for user {user_id}: promo_code_id={promo_code_id}, "
         f"discount={discount_percentage}%"
     )
@@ -77,7 +77,7 @@ async def clear_active_discount(
     await session.flush()
     cleared = result.rowcount > 0
     if cleared:
-        logging.info(f"Active discount cleared for user {user_id}")
+        logging.warning(f"Active discount cleared for user {user_id}")
     return cleared
 
 
@@ -98,7 +98,7 @@ async def clear_active_discount_if_expired(
     await session.flush()
     cleared = result.rowcount > 0
     if cleared:
-        logging.info("Expired active discount cleared for user %s", user_id)
+        logging.warning("Expired active discount cleared for user %s", user_id)
     return cleared
 
 
@@ -122,7 +122,7 @@ async def clear_active_discount_if_matches(
     await session.flush()
     cleared = result.rowcount > 0
     if cleared:
-        logging.info(
+        logging.warning(
             "Active discount cleared for user %s by constrained cleanup.",
             user_id,
         )
@@ -159,5 +159,5 @@ async def clear_active_discounts_by_promo_code(
     await session.flush()
     count = result.rowcount
     if count > 0:
-        logging.info(f"Cleared {count} active discount(s) for promo_code_id={promo_code_id}")
+        logging.warning(f"Cleared {count} active discount(s) for promo_code_id={promo_code_id}")
     return count

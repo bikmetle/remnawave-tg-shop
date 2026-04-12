@@ -107,7 +107,7 @@ class PlategaService:
                     if fallback_original is not None:
                         original_amount = fallback_original
                         discount_amount = original_amount - amount
-                        logging.info(
+                        logging.warning(
                             f"Recording {discount_pct}% discount for Platega payment: "
                             f"original {original_amount:.2f} -> final {amount}"
                         )
@@ -120,7 +120,7 @@ class PlategaService:
                 else:
                     original_amount = amount / denominator
                     discount_amount = original_amount - amount
-                    logging.info(
+                    logging.warning(
                         f"Recording {discount_pct}% discount for Platega payment: "
                         f"original {original_amount:.2f} -> final {amount}"
                     )
@@ -255,7 +255,7 @@ class PlategaService:
                         transaction_id,
                     )
                     if not marked:
-                        logging.info(
+                        logging.warning(
                             "Platega webhook: payment %s already processed atomically",
                             payment.payment_id,
                         )

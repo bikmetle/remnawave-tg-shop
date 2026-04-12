@@ -262,7 +262,7 @@ async def confirm_broadcast_callback_handler(
         sent_count = 0
         failed_count = 0
         admin_user = callback.from_user
-        logging.info(
+        logging.warning(
             f"Admin {admin_user.id} broadcasting '{(content.text or '')[:50]}...' to {len(user_ids)} users."
         )
 

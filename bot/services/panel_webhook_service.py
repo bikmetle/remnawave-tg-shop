@@ -90,7 +90,7 @@ class PanelWebhookService:
                     async with self.async_session_factory() as session:
                         from db.dal import subscription_dal
                         sub = await subscription_dal.get_active_subscription_by_user_id(session, user_id)
-                        logging.info(
+                        logging.warning(
                             "48h webhook check: user_id=%s sub_found=%s auto_renew=%s provider=%s",
                             user_id,
                             bool(sub),
@@ -165,7 +165,7 @@ class PanelWebhookService:
         if not event_name:
             return web.Response(status=200, text="ok_no_event")
 
-        logging.info(
+        logging.warning(
             "Panel webhook event received: %s; telegramId=%s",
             event_name,
             telegram_id if telegram_id is not None else "N/A",

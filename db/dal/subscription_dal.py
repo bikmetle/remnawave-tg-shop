@@ -93,7 +93,7 @@ async def upsert_subscription(session: AsyncSession,
         session, panel_sub_uuid)
 
     if existing_sub:
-        logging.info(
+        logging.warning(
             f"Updating existing subscription {existing_sub.subscription_id} by panel_sub_uuid {panel_sub_uuid}"
         )
         for key, value in sub_payload.items():
@@ -103,7 +103,7 @@ async def upsert_subscription(session: AsyncSession,
         await session.refresh(existing_sub)
         return existing_sub
     else:
-        logging.info(
+        logging.warning(
             f"Creating new subscription with panel_sub_uuid {panel_sub_uuid}")
 
         if sub_payload.get(
@@ -141,7 +141,7 @@ async def deactivate_other_active_subscriptions(
 
     result = await session.execute(stmt)
     if result.rowcount > 0:
-        logging.info(
+        logging.warning(
             f"Deactivated {result.rowcount} other active subscriptions for panel_user_uuid {panel_user_uuid}."
         )
 
@@ -155,7 +155,7 @@ async def deactivate_all_user_subscriptions(
     )
     result = await session.execute(stmt)
     if result.rowcount > 0:
-        logging.info(
+        logging.warning(
             f"Deactivated {result.rowcount} subscriptions for user {user_id} due to missing panel user."
         )
     return result.rowcount
@@ -167,7 +167,7 @@ async def delete_all_user_subscriptions(
     stmt = delete(Subscription).where(Subscription.user_id == user_id)
     result = await session.execute(stmt)
     if result.rowcount > 0:
-        logging.info(
+        logging.warning(
             f"Deleted {result.rowcount} subscription records for user {user_id} for trial reset."
         )
     return result.rowcount

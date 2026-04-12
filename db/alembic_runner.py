@@ -313,7 +313,7 @@ async def run_alembic_migrations(settings: Settings, async_engine: AsyncEngine) 
                 )
 
             if has_legacy_migrator_table:
-                logging.info(
+                logging.warning(
                     "Alembic: applying legacy migrator compatibility fixes before stamp."
                 )
                 await async_connection.run_sync(_run_legacy_migrator_compatibility)
@@ -323,7 +323,7 @@ async def run_alembic_migrations(settings: Settings, async_engine: AsyncEngine) 
                     "proceeding with explicit bootstrap override flag."
                 )
 
-            logging.info(
+            logging.warning(
                 "Alembic: existing schema detected without alembic_version; stamping %s.",
                 _BASELINE_REVISION,
             )
@@ -333,7 +333,7 @@ async def run_alembic_migrations(settings: Settings, async_engine: AsyncEngine) 
                 _BASELINE_REVISION,
             )
 
-        logging.info("Alembic: running upgrade to head...")
+        logging.warning("Alembic: running upgrade to head...")
         await async_connection.run_sync(_run_upgrade, alembic_config)
 
-    logging.info("Alembic: migrations applied successfully.")
+    logging.warning("Alembic: migrations applied successfully.")

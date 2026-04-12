@@ -42,7 +42,7 @@ from bot.utils.message_queue import init_queue_manager
 
 async def register_all_routers(dp: Dispatcher, settings: Settings):
     dp.include_router(build_root_router(settings))
-    logging.info("All application routers registered.")
+    logging.warning("All application routers registered.")
 
 
 async def on_startup_configured(dispatcher: Dispatcher):
@@ -53,7 +53,7 @@ async def on_startup_configured(dispatcher: Dispatcher):
 
     async_session_factory: sessionmaker = dispatcher["async_session_factory"]
 
-    logging.info("STARTUP: on_startup_configured executing...")
+    logging.warning("STARTUP: on_startup_configured executing...")
 
 
     telegram_webhook_url_to_set = settings.WEBHOOK_BASE_URL
@@ -65,7 +65,7 @@ async def on_startup_configured(dispatcher: Dispatcher):
             )
             raise SystemExit("WEBHOOK_BASE_URL is required. Polling mode is disabled.")
 
-        logging.info(
+        logging.warning(
             "STARTUP: Attempting to set Telegram webhook (path=%s)",
             settings.telegram_webhook_path,
         )
@@ -73,9 +73,9 @@ async def on_startup_configured(dispatcher: Dispatcher):
         try:
             current_webhook_info = await bot.get_webhook_info()
             if current_webhook_info.url:
-                logging.info("STARTUP: Telegram webhook already set (non-empty URL).")
+                logging.warning("STARTUP: Telegram webhook already set (non-empty URL).")
             else:
-                logging.info("STARTUP: Telegram webhook currently empty (will set).")
+                logging.warning("STARTUP: Telegram webhook currently empty (will set).")
 
             telegram_webhook_secret = (settings.TELEGRAM_WEBHOOK_SECRET or "").strip() or None
             set_success = await bot.set_webhook(
@@ -85,7 +85,7 @@ async def on_startup_configured(dispatcher: Dispatcher):
                 secret_token=telegram_webhook_secret,
             )
             if set_success:
-                logging.info("STARTUP: bot.set_webhook returned SUCCESS (True).")
+                logging.warning("STARTUP: bot.set_webhook returned SUCCESS (True).")
             else:
                 logging.error("STARTUP: bot.set_webhook returned FAILURE (False).")
 
@@ -120,7 +120,7 @@ async def on_startup_configured(dispatcher: Dispatcher):
                 )
             )
             await bot.set_chat_menu_button(menu_button=MenuButtonDefault())
-            logging.info(
+            logging.warning(
                 "STARTUP: Mini app domain registered and default menu button restored."
             )
         except Exception as e:
@@ -133,7 +133,7 @@ async def on_startup_configured(dispatcher: Dispatcher):
             await bot.set_my_commands([
                 BotCommand(command="start", description=settings.START_COMMAND_DESCRIPTION)
             ])
-            logging.info("STARTUP: /start command description set.")
+            logging.warning("STARTUP: /start command description set.")
         except Exception as e:
             logging.error(f"STARTUP: Failed to set bot commands: {e}", exc_info=True)
 
@@ -141,7 +141,7 @@ async def on_startup_configured(dispatcher: Dispatcher):
     try:
         queue_manager = init_queue_manager(bot)
         dispatcher["queue_manager"] = queue_manager
-        logging.info("STARTUP: Message queue manager initialized")
+        logging.warning("STARTUP: Message queue manager initialized")
     except Exception as e:
         logging.error(f"STARTUP: Failed to initialize message queue manager: {e}", exc_info=True)
 
@@ -150,7 +150,7 @@ async def on_startup_configured(dispatcher: Dispatcher):
         promo_code_service: Optional[PromoCodeService] = dispatcher.get("promo_code_service")
         if promo_code_service:
             await promo_code_service.setup_discount_expiration_worker(async_session_factory)
-            logging.info("STARTUP: Promo discount expiration worker initialized")
+            logging.warning("STARTUP: Promo discount expiration worker initialized")
     except Exception as e:
         logging.error(
             f"STARTUP: Failed to initialize promo discount expiration worker: {e}",
@@ -159,7 +159,7 @@ async def on_startup_configured(dispatcher: Dispatcher):
 
     # Automatic sync on startup
     try:
-        logging.info("STARTUP: Running automatic panel sync...")
+        logging.warning("STARTUP: Running automatic panel sync...")
         
         async with async_session_factory() as session:
             sync_result = await perform_sync(
@@ -170,14 +170,14 @@ async def on_startup_configured(dispatcher: Dispatcher):
             )
             
         if sync_result.get("status") == "completed":
-            logging.info(f"STARTUP: Automatic sync completed successfully. Details: {sync_result.get('details', 'N/A')}")
+            logging.warning(f"STARTUP: Automatic sync completed successfully. Details: {sync_result.get('details', 'N/A')}")
         else:
             logging.warning(f"STARTUP: Automatic sync completed with issues. Status: {sync_result.get('status', 'unknown')}")
             
     except Exception as e:
         logging.error(f"STARTUP: Failed to run automatic sync: {e}", exc_info=True)
 
-    logging.info("STARTUP: Bot on_startup_configured completed.")
+    logging.warning("STARTUP: Bot on_startup_configured completed.")
 
 
 async def on_shutdown_configured(dispatcher: Dispatcher):
@@ -191,7 +191,7 @@ async def on_shutdown_configured(dispatcher: Dispatcher):
         if callable(close_coro):
             try:
                 await close_coro()
-                logging.info(f"{key} closed on shutdown.")
+                logging.warning(f"{key} closed on shutdown.")
             except Exception as e:
                 logging.warning(f"Failed to close {key}: {e}")
         else:
@@ -199,7 +199,7 @@ async def on_shutdown_configured(dispatcher: Dispatcher):
             if callable(close_session):
                 try:
                     await close_session()
-                    logging.info(f"{key} session closed on shutdown.")
+                    logging.warning(f"{key} session closed on shutdown.")
                 except Exception as e:
                     logging.warning(f"Failed to close session for {key}: {e}")
 
@@ -223,18 +223,18 @@ async def on_shutdown_configured(dispatcher: Dispatcher):
     if bot and bot.session:
         try:
             await bot.session.close()
-            logging.info("SHUTDOWN: Aiogram Bot session closed.")
+            logging.warning("SHUTDOWN: Aiogram Bot session closed.")
         except Exception as e:
             logging.warning(f"SHUTDOWN: Failed to close bot session: {e}")
 
     from db.database_setup import async_engine as global_async_engine
 
     if global_async_engine:
-        logging.info("SHUTDOWN: Disposing SQLAlchemy engine...")
+        logging.warning("SHUTDOWN: Disposing SQLAlchemy engine...")
         await global_async_engine.dispose()
-        logging.info("SHUTDOWN: SQLAlchemy engine disposed.")
+        logging.warning("SHUTDOWN: SQLAlchemy engine disposed.")
 
-    logging.info("SHUTDOWN: Bot on_shutdown_configured completed.")
+    logging.warning("SHUTDOWN: Bot on_shutdown_configured completed.")
 
 
 async def run_bot(settings_param: Settings):
@@ -252,7 +252,7 @@ async def run_bot(settings_param: Settings):
     try:
         bot_info = await bot.get_me()
         actual_bot_username = bot_info.username
-        logging.info(f"Bot username resolved: @{actual_bot_username}")
+        logging.warning(f"Bot username resolved: @{actual_bot_username}")
     except Exception as e:
         logging.error(
             f"Failed to get bot info (e.g., for YooKassa default URL): {e}. Using fallback: {actual_bot_username}"
@@ -288,11 +288,11 @@ async def run_bot(settings_param: Settings):
         await dp.emit_shutdown()
         raise SystemExit("WEBHOOK_BASE_URL is required. Polling mode is disabled.")
 
-    logging.info(f"--- Bot Run Mode Decision ---")
-    logging.info(f"Configured WEBHOOK_BASE_URL: '{tg_webhook_base}' -> Webhook Mode: ENABLED")
-    logging.info(f"YooKassa webhook path: '{settings_param.yookassa_webhook_path}'")
-    logging.info(f"Decision: Run AIOHTTP server: ENABLED (required for webhooks)")
-    logging.info(f"--- End Bot Run Mode Decision ---")
+    logging.warning(f"--- Bot Run Mode Decision ---")
+    logging.warning(f"Configured WEBHOOK_BASE_URL: '{tg_webhook_base}' -> Webhook Mode: ENABLED")
+    logging.warning(f"YooKassa webhook path: '{settings_param.yookassa_webhook_path}'")
+    logging.warning(f"Decision: Run AIOHTTP server: ENABLED (required for webhooks)")
+    logging.warning(f"--- End Bot Run Mode Decision ---")
 
     web_app_runner = None
     main_tasks = []
@@ -305,22 +305,22 @@ async def run_bot(settings_param: Settings):
 
     # Recurring billing moved to panel webhook (24h before expiry). No periodic task needed here.
 
-    logging.info("Starting bot in Webhook mode with AIOHTTP server...")
-    logging.info(f"Starting bot with main tasks: {[task.get_name() for task in main_tasks]}")
+    logging.warning("Starting bot in Webhook mode with AIOHTTP server...")
+    logging.warning(f"Starting bot with main tasks: {[task.get_name() for task in main_tasks]}")
 
     try:
         await asyncio.gather(*main_tasks)
     except (KeyboardInterrupt, SystemExit, asyncio.CancelledError) as e:
-        logging.info(f"Main bot loop interrupted/cancelled: {type(e).__name__} - {e}")
+        logging.warning(f"Main bot loop interrupted/cancelled: {type(e).__name__} - {e}")
     finally:
-        logging.info("Initiating final bot shutdown sequence...")
+        logging.warning("Initiating final bot shutdown sequence...")
         for task in main_tasks:
             if task and not task.done():
                 task.cancel()
                 try:
                     await task
                 except asyncio.CancelledError:
-                    logging.info(
+                    logging.warning(
                         f"Task '{task.get_name()}' was cancelled successfully."
                     )
                 except Exception as e_task_cancel:
@@ -331,9 +331,9 @@ async def run_bot(settings_param: Settings):
 
         if web_app_runner:
             await web_app_runner.cleanup()
-            logging.info("AIOHTTP AppRunner cleaned up.")
+            logging.warning("AIOHTTP AppRunner cleaned up.")
 
         await dp.emit_shutdown()
-        logging.info("Dispatcher shutdown sequence emitted.")
+        logging.warning("Dispatcher shutdown sequence emitted.")
 
-        logging.info("Bot run_bot function finished.")
+        logging.warning("Bot run_bot function finished.")

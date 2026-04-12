@@ -123,11 +123,11 @@ async def create_user(session: AsyncSession, user_data: Dict[str, Any]) -> Tuple
     user = await get_user_by_id(session, user_id)
 
     if created and user is not None:
-        logging.info(
+        logging.warning(
             f"New user {user.user_id} created in DAL. Referred by: {user.referred_by_id or 'N/A'}."
         )
     elif user is not None:
-        logging.info(
+        logging.warning(
             f"User {user.user_id} already exists in DAL. Proceeding without creation."
         )
 

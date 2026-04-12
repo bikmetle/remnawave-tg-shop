@@ -24,7 +24,7 @@ def build_dispatcher(settings: Settings, async_session_factory: sessionmaker) ->
     session = None
     if settings.TELEGRAM_PROXY_URL:
         session = AiohttpSession(proxy=settings.TELEGRAM_PROXY_URL)
-        logging.info("Telegram Bot API proxy configured: %s", settings.TELEGRAM_PROXY_URL)
+        logging.warning("Telegram Bot API proxy configured: %s", settings.TELEGRAM_PROXY_URL)
 
     bot = Bot(token=settings.BOT_TOKEN, default=default_props, session=session)
 

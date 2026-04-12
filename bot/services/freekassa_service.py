@@ -109,7 +109,7 @@ class FreeKassaService:
                     if fallback_original is not None:
                         original_amount = fallback_original
                         discount_amount = original_amount - amount
-                        logging.info(
+                        logging.warning(
                             f"Recording {discount_pct}% discount for FreeKassa payment: "
                             f"original {original_amount:.2f} -> final {amount}"
                         )
@@ -122,7 +122,7 @@ class FreeKassaService:
                 else:
                     original_amount = amount / denominator
                     discount_amount = original_amount - amount
-                    logging.info(
+                    logging.warning(
                         f"Recording {discount_pct}% discount for FreeKassa payment: "
                         f"original {original_amount:.2f} -> final {amount}"
                     )
@@ -331,7 +331,7 @@ class FreeKassaService:
                 return web.Response(status=400, text="currency_mismatch")
 
             if payment.status == "succeeded":
-                logging.info(f"FreeKassa webhook: payment {payment_db_id} already succeeded")
+                logging.warning(f"FreeKassa webhook: payment {payment_db_id} already succeeded")
                 return web.Response(text="YES")
 
             # Optional amount verification
@@ -358,7 +358,7 @@ class FreeKassaService:
                     provider_payment_id=provider_id,
                 )
                 if not marked:
-                    logging.info(
+                    logging.warning(
                         "FreeKassa webhook: payment %s already processed atomically",
                         payment.payment_id,
                     )

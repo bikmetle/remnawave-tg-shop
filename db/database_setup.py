@@ -28,7 +28,7 @@ def init_db_connection(settings: Settings) -> sessionmaker:
 
     if async_engine is None:
         masked_url = _mask_db_url(settings.DATABASE_URL)
-        logging.info(
+        logging.warning(
             f"Attempting to create SQLAlchemy engine with URL: {masked_url}"
         )
         async_engine = create_async_engine(
@@ -44,7 +44,7 @@ def init_db_connection(settings: Settings) -> sessionmaker:
         autocommit=False,
         autoflush=False,
     )
-    logging.info(
+    logging.warning(
         "SQLAlchemy Async Engine and SessionFactory configured for PostgreSQL."
     )
     return local_async_session_factory
@@ -77,14 +77,14 @@ async def init_db(settings: Settings, session_factory: sessionmaker):
         )
 
     await run_alembic_migrations(settings, async_engine)
-    logging.info("PostgreSQL database migrations checked/applied via Alembic.")
+    logging.warning("PostgreSQL database migrations checked/applied via Alembic.")
 
     async with session_factory() as session:
         from .dal.panel_sync_dal import get_panel_sync_status, update_panel_sync_status
         try:
             current_status = await get_panel_sync_status(session)
             if current_status is None:
-                logging.info("Initializing panel_sync_status record.")
+                logging.warning("Initializing panel_sync_status record.")
                 await update_panel_sync_status(session,
                                                status="never_run",
                                                details="System initialized",

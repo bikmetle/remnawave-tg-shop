@@ -1,5 +1,6 @@
 import logging
 import re
+import time
 from aiogram import Router, F, types, Bot
 from aiogram.utils.text_decorations import html_decoration as hd
 from aiogram.filters import CommandStart, Command
@@ -31,6 +32,14 @@ from bot.middlewares.i18n import JsonI18n
 from bot.utils.text_sanitizer import sanitize_username, sanitize_display_name
 
 router = Router(name="user_start_router")
+
+
+def _telegram_message_datetime_utc(message: types.Message) -> datetime:
+    """Telegram stores message.date in UTC; aiogram may expose it as naive datetime."""
+    d = message.date
+    if d.tzinfo is None:
+        return d.replace(tzinfo=timezone.utc)
+    return d.astimezone(timezone.utc)
 
 
 async def send_main_menu(
@@ -221,7 +230,7 @@ async def ensure_required_channel_subscription(
         if status_value in allowed_statuses:
             is_member = True
     except TelegramBadRequest as bad_request:
-        logging.info(
+        logging.warning(
             "Required channel check: user %s not subscribed (details: %s)",
             user_id,
             bad_request,
@@ -291,7 +300,7 @@ async def ensure_required_channel_subscription(
         )
 
     if is_member:
-        logging.info(
+        logging.warning(
             "User %s confirmed as member of required channel %s (status=%s).",
             user_id,
             required_channel_id,
@@ -363,301 +372,334 @@ async def start_command_handler(
     promo_match: Optional[re.Match] = None,
     ad_param_match: Optional[re.Match] = None,
 ):
-    await state.clear()
-    current_lang = i18n_data.get("current_language", settings.DEFAULT_LANGUAGE)
-    i18n: Optional[JsonI18n] = i18n_data.get("i18n_instance")
-    _ = lambda key, **kwargs: i18n.gettext(current_lang, key, **kwargs) if i18n else key
-
+    perf_t0 = time.perf_counter()
+    server_receive_utc = datetime.now(timezone.utc)
     user = message.from_user
     user_id = user.id
-
-    referred_by_user_id: Optional[int] = None
-    promo_code_to_apply: Optional[str] = None
-    ad_start_param: Optional[str] = None
-
-    if ref_match and settings.REFERRAL_ENABLED:
-        raw_ref_value = ref_match.group(1)
-        if raw_ref_value.isdigit():
-            if settings.LEGACY_REFS:
-                potential_referrer_id = int(raw_ref_value)
-                if potential_referrer_id != user_id and await user_dal.get_user_by_id(
-                    session, potential_referrer_id
-                ):
-                    referred_by_user_id = potential_referrer_id
-        else:
-            normalized_code = raw_ref_value.strip()
-            if normalized_code and normalized_code[0].lower() == "u":
-                normalized_code = normalized_code[1:]
-            ref_user = None
-            if normalized_code:
-                ref_user = await user_dal.get_user_by_referral_code(
-                    session, normalized_code
-                )
-            if ref_user and ref_user.user_id != user_id:
-                referred_by_user_id = ref_user.user_id
-    elif ref_match and not settings.REFERRAL_ENABLED:
-        logging.info(
-            "User %s started with referral parameter while referral system is disabled.",
+    if settings.LOG_START_COMMAND_TIMING:
+        tg_utc = _telegram_message_datetime_utc(message)
+        delivery_lag_s = (server_receive_utc - tg_utc).total_seconds()
+        logging.warning(
+            "[/start timing] user_id=%s delivery_lag_s=%.3f | "
+            "Wall clock from tapping /start minus this lag ≈ time before your server (client/Telegram/webhook). "
+            "telegram_msg_utc=%s handler_start_utc=%s",
             user_id,
+            delivery_lag_s,
+            tg_utc.isoformat(timespec="milliseconds"),
+            server_receive_utc.isoformat(timespec="milliseconds"),
         )
-    elif promo_match:
-        promo_code_to_apply = promo_match.group(1)
-        logging.info(f"User {user_id} started with promo code: {promo_code_to_apply}")
-    elif ad_param_match:
-        ad_start_param = ad_param_match.group(1)
-        logging.info(f"User {user_id} started with ad start param: {ad_start_param}")
 
-    sanitized_username = sanitize_username(user.username)
-    sanitized_first_name = sanitize_display_name(user.first_name)
-    sanitized_last_name = sanitize_display_name(user.last_name)
-
-    db_user = await user_dal.get_user_by_id(session, user_id)
-    if not db_user:
-        user_data_to_create = {
-            "user_id": user_id,
-            "username": sanitized_username,
-            "first_name": sanitized_first_name,
-            "last_name": sanitized_last_name,
-            "language_code": current_lang,
-            "referred_by_id": referred_by_user_id,
-            "registration_date": datetime.now(timezone.utc),
-        }
-        try:
-            db_user, created = await user_dal.create_user(session, user_data_to_create)
-
-            if created:
-                try:
-                    await session.commit()
-                except Exception as commit_error:
-                    await session.rollback()
-                    logging.error(
-                        f"Failed to commit new user {user_id}: {commit_error}",
-                        exc_info=True,
+    async def _do_start_body() -> None:
+        await state.clear()
+        current_lang = i18n_data.get("current_language", settings.DEFAULT_LANGUAGE)
+        i18n: Optional[JsonI18n] = i18n_data.get("i18n_instance")
+        _ = lambda key, **kwargs: i18n.gettext(current_lang, key, **kwargs) if i18n else key
+        referred_by_user_id: Optional[int] = None
+        promo_code_to_apply: Optional[str] = None
+        ad_start_param: Optional[str] = None
+    
+        if ref_match and settings.REFERRAL_ENABLED:
+            raw_ref_value = ref_match.group(1)
+            if raw_ref_value.isdigit():
+                if settings.LEGACY_REFS:
+                    potential_referrer_id = int(raw_ref_value)
+                    if potential_referrer_id != user_id and await user_dal.get_user_by_id(
+                        session, potential_referrer_id
+                    ):
+                        referred_by_user_id = potential_referrer_id
+            else:
+                normalized_code = raw_ref_value.strip()
+                if normalized_code and normalized_code[0].lower() == "u":
+                    normalized_code = normalized_code[1:]
+                ref_user = None
+                if normalized_code:
+                    ref_user = await user_dal.get_user_by_referral_code(
+                        session, normalized_code
                     )
-                    await message.answer(_("error_occurred_processing_request"))
-                    return
-
-                logging.info(
-                    f"New user {user_id} added to session. Referred by: {referred_by_user_id or 'N/A'}."
-                )
-
-                # Send notification about new user registration
-                try:
-                    from bot.services.notification_service import NotificationService
-
-                    notification_service = NotificationService(
-                        message.bot, settings, i18n
-                    )
-                    await notification_service.notify_new_user_registration(
-                        user_id=user_id,
-                        username=sanitized_username,
-                        first_name=sanitized_first_name,
-                        referred_by_id=referred_by_user_id,
-                    )
-                except Exception as e:
-                    logging.error(f"Failed to send new user notification: {e}")
-        except Exception as e_create:
-            logging.error(
-                f"Failed to add new user {user_id} to session: {e_create}",
-                exc_info=True,
+                if ref_user and ref_user.user_id != user_id:
+                    referred_by_user_id = ref_user.user_id
+        elif ref_match and not settings.REFERRAL_ENABLED:
+            logging.warning(
+                "User %s started with referral parameter while referral system is disabled.",
+                user_id,
             )
-            await message.answer(_("error_occurred_processing_request"))
-            return
-    else:
-        update_payload = {}
-        if db_user.language_code != current_lang:
-            update_payload["language_code"] = current_lang
-        # Set referral only if not already set AND user is not currently active.
-        # This allows previously subscribed but currently inactive users to be attributed.
-        if referred_by_user_id and db_user.referred_by_id is None:
+        elif promo_match:
+            promo_code_to_apply = promo_match.group(1)
+            logging.warning(f"User {user_id} started with promo code: {promo_code_to_apply}")
+        elif ad_param_match:
+            ad_start_param = ad_param_match.group(1)
+            logging.warning(f"User {user_id} started with ad start param: {ad_start_param}")
+    
+    
+        sanitized_username = sanitize_username(user.username)
+        sanitized_first_name = sanitize_display_name(user.first_name)
+        sanitized_last_name = sanitize_display_name(user.last_name)
+    
+        db_user = await user_dal.get_user_by_id(session, user_id)
+    
+        if not db_user:
+            user_data_to_create = {
+                "user_id": user_id,
+                "username": sanitized_username,
+                "first_name": sanitized_first_name,
+                "last_name": sanitized_last_name,
+                "language_code": current_lang,
+                "referred_by_id": referred_by_user_id,
+                "registration_date": datetime.now(timezone.utc),
+            }
             try:
-                is_active_now = await subscription_service.has_active_subscription(
-                    session, user_id
-                )
-            except Exception:
-                is_active_now = False
-            if not is_active_now:
-                update_payload["referred_by_id"] = referred_by_user_id
-        if sanitized_username != db_user.username:
-            update_payload["username"] = sanitized_username
-        if sanitized_first_name != db_user.first_name:
-            update_payload["first_name"] = sanitized_first_name
-        if sanitized_last_name != db_user.last_name:
-            update_payload["last_name"] = sanitized_last_name
-
-        if update_payload:
-            try:
-                await user_dal.update_user(session, user_id, update_payload)
-
-                logging.info(
-                    f"Updated existing user {user_id} in session: {update_payload}"
-                )
-            except Exception as e_update:
-                logging.error(
-                    f"Failed to update existing user {user_id} in session: {e_update}",
-                    exc_info=True,
-                )
-
-    # Attribute user to ad campaign if start param provided
-    if ad_start_param:
-        try:
-            from db.dal import ad_dal as _ad_dal
-
-            campaign = await _ad_dal.get_campaign_by_start_param(
-                session, ad_start_param
-            )
-            if campaign and campaign.is_active:
-                await _ad_dal.ensure_attribution(
-                    session, user_id=user_id, campaign_id=campaign.ad_campaign_id
-                )
-                await session.commit()
-        except Exception as e_attr:
-            logging.error(
-                f"Failed to attribute user {user_id} to ad '{ad_start_param}': {e_attr}"
-            )
-            try:
-                await session.rollback()
-            except Exception as exc:
-                logging.debug(
-                    "Suppressed exception in bot/handlers/user/start.py: %s", exc
-                )
-
-    if not await ensure_required_channel_subscription(
-        message, settings, i18n, current_lang, session, db_user
-    ):
-        return
-
-    # Send welcome message if not disabled
-    if not settings.DISABLE_WELCOME_MESSAGE:
-        await message.answer(_(key="welcome", user_name=hd.quote(user.full_name)))
-
-    # Auto-apply promo code if provided via start parameter
-    if promo_code_to_apply:
-        try:
-            promo_code_service = PromoCodeService(
-                settings, subscription_service, message.bot, i18n
-            )
-
-            success_bonus, bonus_result = await promo_code_service.apply_promo_code(
-                session, user_id, promo_code_to_apply, current_lang
-            )
-
-            if success_bonus:
-                await session.commit()
-                logging.info(
-                    f"Auto-applied promo code '{promo_code_to_apply}' for user {user_id}"
-                )
-
-                # Get updated subscription details
-                active = await subscription_service.get_active_subscription_details(
-                    session, user_id
-                )
-                config_link_display = active.get("config_link") if active else None
-                connect_button_url = (
-                    active.get("connect_button_url") if active else None
-                )
-                config_link_text = config_link_display or _("config_link_not_available")
-
-                new_end_date = (
-                    bonus_result if isinstance(bonus_result, datetime) else None
-                )
-
-                promo_success_text = _(
-                    "promo_code_applied_success_full",
-                    end_date=(
-                        new_end_date.strftime("%d.%m.%Y %H:%M:%S")
-                        if new_end_date
-                        else "N/A"
-                    ),
-                    config_link=config_link_text,
-                )
-
-                from bot.keyboards.inline.user_keyboards import (
-                    get_connect_and_main_keyboard,
-                )
-
-                await message.answer(
-                    promo_success_text,
-                    reply_markup=get_connect_and_main_keyboard(
-                        current_lang,
-                        i18n,
-                        settings,
-                        config_link_display,
-                        connect_button_url=connect_button_url,
-                    ),
-                    parse_mode="HTML",
-                )
-
-                # Don't show main menu if promo was successfully applied
-                return
-
-            (
-                success_discount,
-                discount_result,
-            ) = await promo_code_service.apply_discount_promo_code(
-                session, user_id, promo_code_to_apply, current_lang
-            )
-
-            if success_discount:
-                await session.commit()
-                discount_pct = (
-                    discount_result if isinstance(discount_result, int) else 0
-                )
-                logging.info(
-                    f"Auto-applied discount promo code '{promo_code_to_apply}' for user {user_id}: {discount_pct}%"
-                )
-
-                if settings.LOG_PROMO_ACTIVATIONS:
+                db_user, created = await user_dal.create_user(session, user_data_to_create)
+    
+                if created:
                     try:
-                        from bot.services.notification_service import (
-                            NotificationService,
+                        await session.commit()
+                    except Exception as commit_error:
+                        await session.rollback()
+                        logging.error(
+                            f"Failed to commit new user {user_id}: {commit_error}",
+                            exc_info=True,
                         )
-
+                        await message.answer(_("error_occurred_processing_request"))
+                        return
+    
+                    logging.warning(
+                        f"New user {user_id} added to session. Referred by: {referred_by_user_id or 'N/A'}."
+                    )
+    
+                    # Send notification about new user registration
+                    try:
+                        from bot.services.notification_service import NotificationService
+    
                         notification_service = NotificationService(
                             message.bot, settings, i18n
                         )
-                        await notification_service.notify_discount_promo_activation(
+                        await notification_service.notify_new_user_registration(
                             user_id=user_id,
-                            promo_code=promo_code_to_apply.upper(),
-                            discount_percentage=discount_pct,
-                            username=user.username,
+                            username=sanitized_username,
+                            first_name=sanitized_first_name,
+                            referred_by_id=referred_by_user_id,
                         )
-                    except Exception as notify_error:
-                        logging.error(
-                            f"Failed to send discount promo activation notification: {notify_error}"
-                        )
-
-                from bot.keyboards.inline.user_keyboards import (
-                    get_back_to_main_menu_markup,
+                    except Exception as e:
+                        logging.error(f"Failed to send new user notification: {e}")
+            except Exception as e_create:
+                logging.error(
+                    f"Failed to add new user {user_id} to session: {e_create}",
+                    exc_info=True,
                 )
-
-                await message.answer(
-                    _(
-                        "discount_promo_code_applied_success",
-                        code=hd.quote(promo_code_to_apply.upper()),
-                        discount=discount_pct,
-                    ),
-                    reply_markup=get_back_to_main_menu_markup(current_lang, i18n),
-                    parse_mode="HTML",
-                )
+                await message.answer(_("error_occurred_processing_request"))
                 return
-
-            await session.rollback()
+    
+        else:
+            update_payload = {}
+            if db_user.language_code != current_lang:
+                update_payload["language_code"] = current_lang
+            # Set referral only if not already set AND user is not currently active.
+            # This allows previously subscribed but currently inactive users to be attributed.
+            if referred_by_user_id and db_user.referred_by_id is None:
+                try:
+                    is_active_now = await subscription_service.has_active_subscription(
+                        session, user_id
+                    )
+                except Exception:
+                    is_active_now = False
+                if not is_active_now:
+                    update_payload["referred_by_id"] = referred_by_user_id
+            if sanitized_username != db_user.username:
+                update_payload["username"] = sanitized_username
+            if sanitized_first_name != db_user.first_name:
+                update_payload["first_name"] = sanitized_first_name
+            if sanitized_last_name != db_user.last_name:
+                update_payload["last_name"] = sanitized_last_name
+    
+            if update_payload:
+                try:
+                    await user_dal.update_user(session, user_id, update_payload)
+    
+                    logging.warning(
+                        f"Updated existing user {user_id} in session: {update_payload}"
+                    )
+                except Exception as e_update:
+                    logging.error(
+                        f"Failed to update existing user {user_id} in session: {e_update}",
+                        exc_info=True,
+                    )
+    
+        # Attribute user to ad campaign if start param provided
+        if ad_start_param:
+            try:
+                from db.dal import ad_dal as _ad_dal
+    
+                campaign = await _ad_dal.get_campaign_by_start_param(
+                    session, ad_start_param
+                )
+                if campaign and campaign.is_active:
+                    await _ad_dal.ensure_attribution(
+                        session, user_id=user_id, campaign_id=campaign.ad_campaign_id
+                    )
+                    await session.commit()
+            except Exception as e_attr:
+                logging.error(
+                    f"Failed to attribute user {user_id} to ad '{ad_start_param}': {e_attr}"
+                )
+                try:
+                    await session.rollback()
+                except Exception as exc:
+                    logging.debug(
+                        "Suppressed exception in bot/handlers/user/start.py: %s", exc
+                    )
+    
+    
+        if not await ensure_required_channel_subscription(
+            message, settings, i18n, current_lang, session, db_user
+        ):
+            return
+    
+        # Send welcome message if not disabled
+        if not settings.DISABLE_WELCOME_MESSAGE:
+            await message.answer(_(key="welcome", user_name=hd.quote(user.full_name)))
+    
+        # Auto-apply promo code if provided via start parameter
+        if promo_code_to_apply:
+            try:
+                promo_code_service = PromoCodeService(
+                    settings, subscription_service, message.bot, i18n
+                )
+    
+                success_bonus, bonus_result = await promo_code_service.apply_promo_code(
+                    session, user_id, promo_code_to_apply, current_lang
+                )
+    
+                if success_bonus:
+                    await session.commit()
+                    logging.warning(
+                        f"Auto-applied promo code '{promo_code_to_apply}' for user {user_id}"
+                    )
+    
+                    # Get updated subscription details
+                    active = await subscription_service.get_active_subscription_details(
+                        session, user_id
+                    )
+                    config_link_display = active.get("config_link") if active else None
+                    connect_button_url = (
+                        active.get("connect_button_url") if active else None
+                    )
+                    config_link_text = config_link_display or _("config_link_not_available")
+    
+                    new_end_date = (
+                        bonus_result if isinstance(bonus_result, datetime) else None
+                    )
+    
+                    promo_success_text = _(
+                        "promo_code_applied_success_full",
+                        end_date=(
+                            new_end_date.strftime("%d.%m.%Y %H:%M:%S")
+                            if new_end_date
+                            else "N/A"
+                        ),
+                        config_link=config_link_text,
+                    )
+    
+                    from bot.keyboards.inline.user_keyboards import (
+                        get_connect_and_main_keyboard,
+                    )
+    
+                    await message.answer(
+                        promo_success_text,
+                        reply_markup=get_connect_and_main_keyboard(
+                            current_lang,
+                            i18n,
+                            settings,
+                            config_link_display,
+                            connect_button_url=connect_button_url,
+                        ),
+                        parse_mode="HTML",
+                    )
+    
+                    # Don't show main menu if promo was successfully applied
+                    return
+    
+                (
+                    success_discount,
+                    discount_result,
+                ) = await promo_code_service.apply_discount_promo_code(
+                    session, user_id, promo_code_to_apply, current_lang
+                )
+    
+                if success_discount:
+                    await session.commit()
+                    discount_pct = (
+                        discount_result if isinstance(discount_result, int) else 0
+                    )
+                    logging.warning(
+                        f"Auto-applied discount promo code '{promo_code_to_apply}' for user {user_id}: {discount_pct}%"
+                    )
+    
+                    if settings.LOG_PROMO_ACTIVATIONS:
+                        try:
+                            from bot.services.notification_service import (
+                                NotificationService,
+                            )
+    
+                            notification_service = NotificationService(
+                                message.bot, settings, i18n
+                            )
+                            await notification_service.notify_discount_promo_activation(
+                                user_id=user_id,
+                                promo_code=promo_code_to_apply.upper(),
+                                discount_percentage=discount_pct,
+                                username=user.username,
+                            )
+                        except Exception as notify_error:
+                            logging.error(
+                                f"Failed to send discount promo activation notification: {notify_error}"
+                            )
+    
+                    from bot.keyboards.inline.user_keyboards import (
+                        get_back_to_main_menu_markup,
+                    )
+    
+                    await message.answer(
+                        _(
+                            "discount_promo_code_applied_success",
+                            code=hd.quote(promo_code_to_apply.upper()),
+                            discount=discount_pct,
+                        ),
+                        reply_markup=get_back_to_main_menu_markup(current_lang, i18n),
+                        parse_mode="HTML",
+                    )
+                    return
+    
+                await session.rollback()
+                logging.warning(
+                    f"Failed to auto-apply promo code '{promo_code_to_apply}' for user {user_id}. "
+                    f"Bonus reason: {bonus_result}. Discount reason: {discount_result}"
+                )
+                # Continue to show main menu if promo failed
+    
+            except Exception as e:
+                logging.error(
+                    f"Error auto-applying promo code '{promo_code_to_apply}' for user {user_id}: {e}"
+                )
+                await session.rollback()
+    
+    
+        await send_main_menu(
+            message, settings, i18n_data, subscription_service, session, is_edit=False
+        )
+    
+    
+    try:
+        await _do_start_body()
+    finally:
+        if settings.LOG_START_COMMAND_TIMING:
+            elapsed_ms = (time.perf_counter() - perf_t0) * 1000
             logging.warning(
-                f"Failed to auto-apply promo code '{promo_code_to_apply}' for user {user_id}. "
-                f"Bonus reason: {bonus_result}. Discount reason: {discount_result}"
+                "[/start timing] user_id=%s handler_total_ms=%.1f | "
+                "Server-side work including Telegram API; if delivery_lag_s was low but the chat still feels slow, "
+                "suspect Telegram→device (VPN/network/restrictions).",
+                user_id,
+                elapsed_ms,
             )
-            # Continue to show main menu if promo failed
-
-        except Exception as e:
-            logging.error(
-                f"Error auto-applying promo code '{promo_code_to_apply}' for user {user_id}: {e}"
-            )
-            await session.rollback()
-
-    await send_main_menu(
-        message, settings, i18n_data, subscription_service, session, is_edit=False
-    )
 
 
 @router.callback_query(F.data == "channel_subscription:verify")
@@ -823,7 +865,7 @@ async def select_language_callback_handler(
             i18n_data["current_language"] = lang_code
             _ = lambda key, **kwargs: i18n.gettext(lang_code, key, **kwargs)
             await callback.answer(_(key="language_set_alert"))
-            logging.info(f"User {user_id} language updated to {lang_code} in session.")
+            logging.warning(f"User {user_id} language updated to {lang_code} in session.")
         else:
             await callback.answer("Could not set language.", show_alert=True)
             return

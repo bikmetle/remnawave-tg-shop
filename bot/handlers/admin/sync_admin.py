@@ -66,7 +66,7 @@ async def perform_sync(
             }
 
         total_panel_users = len(panel_users_data)
-        logging.info(f"Starting sync for {total_panel_users} panel users.")
+        logging.warning(f"Starting sync for {total_panel_users} panel users.")
 
         for panel_user_dict in panel_users_data:
             try:
@@ -107,7 +107,7 @@ async def perform_sync(
                         session, panel_uuid
                     )
                     if existing_user:
-                        logging.info(
+                        logging.warning(
                             f"Found user by panel UUID {panel_uuid}, telegramId: {existing_user.user_id}"
                         )
                         # Update telegram ID if it was missing in panel data but we have local user
@@ -140,7 +140,7 @@ async def perform_sync(
                             )
                             if was_created:
                                 users_created += 1
-                                logging.info(
+                                logging.warning(
                                     f"Created new user {telegram_id_from_panel} from panel sync with UUID {panel_uuid}"
                                 )
 
@@ -172,7 +172,7 @@ async def perform_sync(
                     existing_user.panel_user_uuid = panel_uuid
                     user_was_updated = True
                     users_uuid_updated += 1
-                    logging.info(
+                    logging.warning(
                         f"Updated panel UUID for user {actual_user_id}: {panel_uuid}"
                     )
 
@@ -264,7 +264,7 @@ async def perform_sync(
                                 subscriptions_synced_count += 1
                                 subscriptions_updated += 1
                                 user_was_updated = True
-                                logging.info(
+                                logging.warning(
                                     f"Synced existing subscription {existing_sub_by_uuid.subscription_id} "
                                     f"for user {actual_user_id}: expires {panel_expire_at}, status {panel_status}"
                                 )
@@ -289,7 +289,7 @@ async def perform_sync(
                                 subscriptions_synced_count += 1
                                 subscriptions_created += 1
                                 user_was_updated = True
-                                logging.info(
+                                logging.warning(
                                     f"Created subscription {created_sub.subscription_id} "
                                     f"for user {actual_user_id} by panel_sub_uuid {subscription_uuid_from_panel}"
                                 )
@@ -313,7 +313,7 @@ async def perform_sync(
                                 subscriptions_synced_count += 1
                                 subscriptions_updated += 1
                                 user_was_updated = True
-                                logging.info(
+                                logging.warning(
                                     f"Updated active subscription {active_sub.subscription_id} "
                                     f"for user {actual_user_id}: expires {panel_expire_at}, status {panel_status}"
                                 )
@@ -386,18 +386,18 @@ async def perform_sync(
         await session.commit()
 
         # Detailed logging summary
-        logging.info(f"Sync completed - Summary:")
-        logging.info(f"  Panel records checked: {panel_records_checked}")
-        logging.info(f"  Users without telegramId: {users_without_telegram_id}")
-        logging.info(f"  Users not found in local DB: {users_not_found_in_db}")
-        logging.info(f"  Users found in local DB: {users_found_in_db}")
-        logging.info(f"  Users created: {users_created}")
-        logging.info(f"  Users with UUID updated: {users_uuid_updated}")
-        logging.info(f"  Users updated overall: {users_updated}")
-        logging.info(f"  Subscriptions total synced: {subscriptions_synced_count}")
-        logging.info(f"  Subscriptions created: {subscriptions_created}")
-        logging.info(f"  Subscriptions updated: {subscriptions_updated}")
-        logging.info(f"  Sync errors: {len(sync_errors)}")
+        logging.warning(f"Sync completed - Summary:")
+        logging.warning(f"  Panel records checked: {panel_records_checked}")
+        logging.warning(f"  Users without telegramId: {users_without_telegram_id}")
+        logging.warning(f"  Users not found in local DB: {users_not_found_in_db}")
+        logging.warning(f"  Users found in local DB: {users_found_in_db}")
+        logging.warning(f"  Users created: {users_created}")
+        logging.warning(f"  Users with UUID updated: {users_uuid_updated}")
+        logging.warning(f"  Users updated overall: {users_updated}")
+        logging.warning(f"  Subscriptions total synced: {subscriptions_synced_count}")
+        logging.warning(f"  Subscriptions created: {subscriptions_created}")
+        logging.warning(f"  Subscriptions updated: {subscriptions_updated}")
+        logging.warning(f"  Sync errors: {len(sync_errors)}")
 
         return {
             "status": status,
@@ -464,7 +464,7 @@ async def sync_command_handler(
     if isinstance(message_event, types.Message):
         await message_event.answer(_("sync_started_simple"))
 
-    logging.info(f"Admin ({message_event.from_user.id}) triggered panel sync.")
+    logging.warning(f"Admin ({message_event.from_user.id}) triggered panel sync.")
 
     # Use the extracted perform_sync function
     try:

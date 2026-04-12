@@ -43,7 +43,7 @@ class BanCheckMiddleware(BaseMiddleware):
             return await handler(event, data)
 
         if db_user_model and db_user_model.is_banned:
-            logging.info(
+            logging.warning(
                 f"User {event_user.id} ({event_user.username or 'NoUsername'}) is banned. Blocking access."
             )
 
@@ -97,7 +97,7 @@ class BanCheckMiddleware(BaseMiddleware):
                     await bot_instance.send_message(event_user.id,
                                                     ban_message_text,
                                                     reply_markup=keyboard)
-                logging.info(f"Ban notification sent to user {event_user.id}.")
+                logging.warning(f"Ban notification sent to user {event_user.id}.")
             except TelegramForbiddenError:
                 logging.warning(
                     f"BanCheck: Bot is blocked by user {event_user.id}.")

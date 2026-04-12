@@ -97,7 +97,7 @@ class StarsService:
             if discount_float:
                 stars_price = math.ceil(final_price_float)
                 discount_amount_stars = original_stars_price - stars_price
-                logging.info(
+                logging.warning(
                     "Stars discount applied: %s -> %.2f -> %s (ceiling)",
                     original_stars_price,
                     final_price_float,
@@ -168,7 +168,7 @@ class StarsService:
                 provider_payment_id,
             )
             if not marked:
-                logging.info(
+                logging.warning(
                     "Stars payment %s already processed atomically",
                     payment_db_id,
                 )

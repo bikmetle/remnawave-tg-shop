@@ -104,7 +104,7 @@ class SubscriptionService:
         )
         if panel_users_by_tg_id_list and len(panel_users_by_tg_id_list) == 1:
             panel_user_obj_from_api = panel_users_by_tg_id_list[0]
-            logging.info(
+            logging.warning(
                 f"Found panel user by telegramId {user_id}: UUID {panel_user_obj_from_api.get('uuid')}, Username: {panel_user_obj_from_api.get('username')}"
             )
         elif panel_users_by_tg_id_list and len(panel_users_by_tg_id_list) > 1:
@@ -115,7 +115,7 @@ class SubscriptionService:
 
         if not panel_user_obj_from_api:
             if current_local_panel_uuid:
-                logging.info(
+                logging.warning(
                     f"User {user_id} (local panel_uuid: {current_local_panel_uuid}) not found on panel by TG ID. Fetching by panel_uuid."
                 )
                 panel_user_obj_from_api = await self.panel_service.get_user_by_uuid(
@@ -125,7 +125,7 @@ class SubscriptionService:
                     logging.warning(
                         f"Local panel_uuid {current_local_panel_uuid} for TG user {user_id} also not found on panel. User might be deleted from panel or UUID desynced."
                     )
-                    logging.info(
+                    logging.warning(
                         f"Creating new panel user '{panel_username_on_panel_standard}' for TG user {user_id}."
                     )
                     creation_response = await self.panel_service.create_panel_user(
@@ -155,7 +155,7 @@ class SubscriptionService:
                         return None, None, None, False
 
             else:
-                logging.info(
+                logging.warning(
                     f"No panel user by TG ID & no local panel_uuid for TG user {user_id}. Creating new panel user '{panel_username_on_panel_standard}'."
                 )
                 creation_response = await self.panel_service.create_panel_user(
@@ -279,7 +279,7 @@ class SubscriptionService:
             and current_local_panel_uuid
             and panel_telegram_id_int != user_id
         ):
-            logging.info(
+            logging.warning(
                 f"Panel user {current_local_panel_uuid} has telegramId '{panel_telegram_id_from_api}'. Updating on panel to '{user_id}'."
             )
             # Also set readable description with Telegram fields
@@ -785,7 +785,7 @@ class SubscriptionService:
             session, user_id, panel_uuid
         )
         if not active_sub or not active_sub.end_date:
-            logging.info(
+            logging.warning(
                 f"No active subscription found for user {user_id}. Creating new one for {bonus_days} days."
             )
             start_date = datetime.now(timezone.utc)
@@ -863,7 +863,7 @@ class SubscriptionService:
                     f"Panel expiry update failed for {panel_uuid} after {reason} bonus. Local DB was updated to {new_end_date_obj}."
                 )
 
-            logging.info(
+            logging.warning(
                 f"Subscription for user {user_id} extended by {bonus_days} days ({reason}). New end date: {new_end_date_obj}."
             )
             return new_end_date_obj
@@ -878,7 +878,7 @@ class SubscriptionService:
     ) -> Optional[Dict[str, Any]]:
         db_user = await user_dal.get_user_by_id(session, user_id)
         if not db_user or not db_user.panel_user_uuid:
-            logging.info(
+            logging.warning(
                 f"User {user_id} not found in DB or no panel_user_uuid for 'my_subscription'."
             )
             return None
@@ -1019,7 +1019,7 @@ class SubscriptionService:
     ) -> bool:
         """Attempt to charge user using saved payment method. Return True on initiated/handled, False on failure."""
         if getattr(self.settings, "traffic_sale_mode", False):
-            logging.info("Auto-renew skipped: traffic sale mode enabled")
+            logging.warning("Auto-renew skipped: traffic sale mode enabled")
             return True
         if not sub.auto_renew_enabled:
             return True
@@ -1027,7 +1027,7 @@ class SubscriptionService:
         if not self.settings.yookassa_autopayments_active:
             return True
         if sub.provider != "yookassa":
-            logging.info(
+            logging.warning(
                 "Auto-renew skipped: provider %s does not support auto-renew",
                 sub.provider,
             )
@@ -1037,7 +1037,7 @@ class SubscriptionService:
 
         default_pm = await get_user_default_payment_method(session, sub.user_id)
         if not default_pm:
-            logging.info(
+            logging.warning(
                 f"Auto-renew skipped: no saved payment method for user {sub.user_id}"
             )
             return False
@@ -1104,7 +1104,7 @@ class SubscriptionService:
                 provider_payment_id=provider_payment_id,
                 new_status="pending_yookassa",
             )
-        logging.info(
+        logging.warning(
             f"Auto-renew initiated for user {sub.user_id} payment_id={resp.get('id')}"
         )
         return True
@@ -1121,7 +1121,7 @@ class SubscriptionService:
             await subscription_dal.update_subscription_notification_time(
                 session, sub_to_update.subscription_id, datetime.now(timezone.utc)
             )
-            logging.info(
+            logging.warning(
                 f"Updated last_notification_sent for user {user_id}, sub_id {sub_to_update.subscription_id}"
             )
         else:

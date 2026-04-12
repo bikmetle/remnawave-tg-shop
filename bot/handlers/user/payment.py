@@ -173,7 +173,7 @@ async def process_successful_payment(session: AsyncSession, bot: Bot,
                 return False
 
         if payment_record and payment_record.status == "succeeded":
-            logging.info(
+            logging.warning(
                 f"Skipping duplicate YooKassa webhook for payment {payment_db_id} (YK: {yk_payment_id_from_hook})."
             )
             return True
@@ -220,7 +220,7 @@ async def process_successful_payment(session: AsyncSession, bot: Bot,
                 payment_db_id,
             )
             if payment_before_update and payment_before_update.status == "succeeded":
-                logging.info(
+                logging.warning(
                     "YooKassa webhook ignored: payment %s already succeeded (db_id=%s)",
                     yk_payment_id_from_hook,
                     payment_db_id,
@@ -239,7 +239,7 @@ async def process_successful_payment(session: AsyncSession, bot: Bot,
                 payment_db_id,
             )
             if payment_after_claim and payment_after_claim.status == "succeeded":
-                logging.info(
+                logging.warning(
                     "YooKassa webhook ignored: payment %s already succeeded after claim attempt",
                     payment_db_id,
                 )
@@ -247,7 +247,7 @@ async def process_successful_payment(session: AsyncSession, bot: Bot,
 
             # Another transaction is processing this payment now.
             if payment_after_claim and payment_after_claim.status == "processing":
-                logging.info(
+                logging.warning(
                     "YooKassa webhook: payment %s is already being processed by another worker",
                     payment_db_id,
                 )
@@ -563,7 +563,7 @@ async def process_cancelled_payment(session: AsyncSession, bot: Bot,
             yk_payment_id=payment_info_from_webhook.get("id"))
 
         if updated_payment:
-            logging.info(
+            logging.warning(
                 f"Payment {payment_db_id} (YK: {payment_info_from_webhook.get('id')}) status updated to cancelled for user {user_id}."
             )
         else:
@@ -613,7 +613,7 @@ async def yookassa_webhook_route(request: web.Request):
         notification_object = WebhookNotification(event_json)
         payment_data_from_notification = notification_object.object
 
-        logging.info(
+        logging.warning(
             f"YooKassa Webhook Parsed: Event='{notification_object.event}', "
             f"PaymentId='{payment_data_from_notification.id}', Status='{payment_data_from_notification.status}'"
         )

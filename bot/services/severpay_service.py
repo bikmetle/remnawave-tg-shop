@@ -130,7 +130,7 @@ class SeverPayService:
                     if fallback_original is not None:
                         original_amount = fallback_original
                         discount_amount = original_amount - amount
-                        logging.info(
+                        logging.warning(
                             f"Recording {discount_pct}% discount for SeverPay payment: "
                             f"original {original_amount:.2f} -> final {amount}"
                         )
@@ -143,7 +143,7 @@ class SeverPayService:
                 else:
                     original_amount = amount / denominator
                     discount_amount = original_amount - amount
-                    logging.info(
+                    logging.warning(
                         f"Recording {discount_pct}% discount for SeverPay payment: "
                         f"original {original_amount:.2f} -> final {amount}"
                     )
@@ -252,7 +252,7 @@ class SeverPayService:
                 return web.json_response({"status": False, "msg": "payment_not_found"}, status=404)
 
             if payment.status == "succeeded" and status == "success":
-                logging.info("SeverPay webhook: payment %s already succeeded", payment.payment_id)
+                logging.warning("SeverPay webhook: payment %s already succeeded", payment.payment_id)
                 return web.json_response({"status": True})
 
             if status == "success" and amount_raw is not None:
@@ -298,7 +298,7 @@ class SeverPayService:
                         provider_id,
                     )
                     if not marked:
-                        logging.info(
+                        logging.warning(
                             "SeverPay webhook: payment %s already processed atomically",
                             payment.payment_id,
                         )

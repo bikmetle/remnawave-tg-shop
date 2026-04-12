@@ -66,7 +66,7 @@ async def show_statistics_handler(callback: types.CallbackQuery,
             bandwidth_stats = await panel_service.get_bandwidth_stats()
             nodes_stats = await panel_service.get_nodes_statistics()
             
-            logging.info(f"Panel stats response: system={system_stats}, bandwidth={bandwidth_stats}, nodes={nodes_stats}")
+            logging.warning(f"Panel stats response: system={system_stats}, bandwidth={bandwidth_stats}, nodes={nodes_stats}")
             
             if system_stats:
                 users = system_stats.get('users', {})

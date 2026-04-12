@@ -33,7 +33,7 @@ class YooKassaService:
             try:
                 Configuration.configure(shop_id, secret_key)
                 self.configured = True
-                logging.info(
+                logging.warning(
                     f"YooKassa SDK configured for shop_id: {shop_id[:5]}...")
             except Exception as e:
                 logging.error(f"Failed to configure YooKassa SDK: {e}",
@@ -44,7 +44,7 @@ class YooKassaService:
             self.return_url = configured_return_url
         elif bot_username_for_default_return:
             self.return_url = f"https://t.me/{bot_username_for_default_return}"
-            logging.info(
+            logging.warning(
                 f"YOOKASSA_RETURN_URL not set, using dynamic default based on bot username: {self.return_url}"
             )
         else:
@@ -53,7 +53,7 @@ class YooKassaService:
                 f"CRITICAL: YOOKASSA_RETURN_URL not set AND bot username not provided. "
                 f"Using placeholder: {self.return_url}. Payments may not complete correctly."
             )
-        logging.info(
+        logging.warning(
             f"YooKassa Service effective return_url for payments: {self.return_url}"
         )
 
@@ -164,7 +164,7 @@ class YooKassaService:
             payment_request = builder.build()
             payment_request_payload = dict(payment_request)
 
-            logging.info(
+            logging.warning(
                 f"Creating YooKassa payment (Idempotence-Key: {idempotence_key}). "
                 f"Amount: {amount} {currency}. Metadata: {metadata}. Payload: {payment_request_payload}"
             )
@@ -174,7 +174,7 @@ class YooKassaService:
                 None, lambda: YooKassaPayment.create(payment_request,
                                                      idempotence_key))
 
-            logging.info(
+            logging.warning(
                 f"YooKassa Payment.create response: ID={response.id}, Status={response.status}, Paid={response.paid}"
             )
 
@@ -220,7 +220,7 @@ class YooKassaService:
                 "YooKassa is not configured. Cannot get payment info.")
             return None
         try:
-            logging.info(
+            logging.warning(
                 f"Fetching payment info from YooKassa for ID: {payment_id_in_yookassa}"
             )
 
@@ -229,7 +229,7 @@ class YooKassaService:
                 None, lambda: YooKassaPayment.find_one(payment_id_in_yookassa))
 
             if payment_info_yk:
-                logging.info(
+                logging.warning(
                     f"YooKassa payment info for {payment_id_in_yookassa}: Status={payment_info_yk.status}, Paid={payment_info_yk.paid}"
                 )
                 pm = getattr(payment_info_yk, 'payment_method', None)
@@ -285,7 +285,7 @@ class YooKassaService:
         try:
             loop = asyncio.get_running_loop()
             await loop.run_in_executor(None, lambda: YooKassaPayment.cancel(payment_id_in_yookassa))
-            logging.info(f"Cancelled YooKassa payment {payment_id_in_yookassa}")
+            logging.warning(f"Cancelled YooKassa payment {payment_id_in_yookassa}")
             return True
         except Exception as e:
             logging.error(f"Failed to cancel YooKassa payment {payment_id_in_yookassa}: {e}")

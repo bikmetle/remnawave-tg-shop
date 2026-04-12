@@ -716,5 +716,5 @@ async def connect_command_handler(
     session: AsyncSession,
     bot: Bot,
 ):
-    logging.info(f"User {message.from_user.id} used /connect command.")
+    logging.warning(f"User {message.from_user.id} used /connect command.")
     await my_subscription_command_handler(message, i18n_data, settings, panel_service, subscription_service, session, bot)

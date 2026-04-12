@@ -758,6 +758,13 @@ class Settings(BaseSettings):
     LOG_SUSPICIOUS_ACTIVITY: bool = Field(
         default=True, description="Send notifications for suspicious promo attempts"
     )
+    LOG_START_COMMAND_TIMING: bool = Field(
+        default=False,
+        description=(
+            "Log /start diagnostics: delivery_lag_s (Telegram message.date vs handler start) "
+            "and handler_total_ms. Enable to see whether delay is before your server vs server work."
+        ),
+    )
     DISCOUNT_PROMO_PAYMENT_TIMEOUT_MINUTES: int = Field(
         default=10,
         description="How long a discount promo reservation is kept before user payment",
