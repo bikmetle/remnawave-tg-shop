@@ -7,7 +7,7 @@ from pydantic import (
     field_validator,
     model_validator,
 )
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Literal
 
 
 class Settings(BaseSettings):
@@ -236,6 +236,9 @@ class Settings(BaseSettings):
     TRIAL_ENABLED: bool = Field(default=True)
     TRIAL_DURATION_DAYS: int = Field(default=3)
     TRIAL_TRAFFIC_LIMIT_GB: Optional[float] = Field(default=5.0)
+    TRIAL_TRAFFIC_STRATEGY: Literal["DAY", "WEEK", "MONTH", "NO_RESET"] = Field(
+        default="DAY"
+    )
 
     CRYPT4_ENABLED: bool = Field(
         default=False, description="Enable happ crypt4 encryption for subscription URLs"

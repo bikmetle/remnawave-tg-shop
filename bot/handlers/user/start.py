@@ -72,12 +72,10 @@ async def send_main_menu(
 
     show_trial_button_in_menu = False
     if settings.TRIAL_ENABLED:
-        if hasattr(subscription_service, "has_had_any_subscription") and callable(
-            getattr(subscription_service, "has_had_any_subscription")
+        if hasattr(subscription_service, "has_active_subscription") and callable(
+            getattr(subscription_service, "has_active_subscription")
         ):
-            if not await subscription_service.has_had_any_subscription(
-                session, user_id
-            ):
+            if not await subscription_service.has_active_subscription(session, user_id):
                 show_trial_button_in_menu = True
         else:
             logging.error(
