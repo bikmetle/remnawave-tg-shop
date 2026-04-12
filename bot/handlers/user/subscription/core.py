@@ -241,6 +241,7 @@ async def my_subscription_command_handler(
             status=active.get("status_from_panel", get_text("status_active")).capitalize(),
             config_link=config_link_value,
             traffic_limit=(f"{active['traffic_limit_bytes'] / 2**30:.2f} GB" if active.get("traffic_limit_bytes") else get_text("traffic_unlimited")),
+            traffic_limit_strategy=get_text(active.get("traffic_limit_strategy").lower()),
             traffic_used=(
                 f"{active['traffic_used_bytes'] / 2**30:.2f} GB" if active.get("traffic_used_bytes") is not None else get_text("traffic_na")
             ),

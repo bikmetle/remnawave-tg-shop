@@ -977,6 +977,7 @@ class SubscriptionService:
             "user_bot_username": db_user.username,
             "is_panel_data": True,
             "max_devices": hwid_limit,
+            "traffic_limit_strategy": panel_user_data.get("trafficLimitStrategy"),
         }
 
     async def get_subscriptions_ending_soon(
