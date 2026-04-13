@@ -97,7 +97,7 @@ class Settings(BaseSettings):
 
     WEBHOOK_BASE_URL: Optional[str] = None
     TELEGRAM_WEBHOOK_PATH: str = Field(
-        default="/webhook/telegram",
+        default="/telegram",
         description="Relative path for Telegram webhook endpoint",
     )
     TELEGRAM_WEBHOOK_SECRET: Optional[str] = Field(
@@ -347,7 +347,7 @@ class Settings(BaseSettings):
     @computed_field
     @property
     def telegram_webhook_path(self) -> str:
-        path = (self.TELEGRAM_WEBHOOK_PATH or "").strip() or "/webhook/telegram"
+        path = (self.TELEGRAM_WEBHOOK_PATH or "").strip() or "/telegram"
         if not path.startswith("/"):
             path = f"/{path}"
         return path
@@ -363,7 +363,7 @@ class Settings(BaseSettings):
     @computed_field
     @property
     def yookassa_webhook_path(self) -> str:
-        return "/webhook/yookassa"
+        return "/yookassa"
 
     @computed_field
     @property
@@ -376,7 +376,7 @@ class Settings(BaseSettings):
     @computed_field
     @property
     def panel_webhook_path(self) -> str:
-        return "/webhook/panel"
+        return "/panel"
 
     @computed_field
     @property
@@ -389,7 +389,7 @@ class Settings(BaseSettings):
     @computed_field
     @property
     def cryptopay_webhook_path(self) -> str:
-        return "/webhook/cryptopay"
+        return "/cryptopay"
 
     @computed_field
     @property
@@ -402,7 +402,7 @@ class Settings(BaseSettings):
     @computed_field
     @property
     def freekassa_webhook_path(self) -> str:
-        return "/webhook/freekassa"
+        return "/freekassa"
 
     @computed_field
     @property
@@ -415,7 +415,7 @@ class Settings(BaseSettings):
     @computed_field
     @property
     def severpay_webhook_path(self) -> str:
-        return "/webhook/severpay"
+        return "/severpay"
 
     @computed_field
     @property
@@ -428,7 +428,7 @@ class Settings(BaseSettings):
     @computed_field
     @property
     def platega_webhook_path(self) -> str:
-        return "/webhook/platega"
+        return "/platega"
 
     @computed_field
     @property
@@ -680,10 +680,10 @@ class Settings(BaseSettings):
     @classmethod
     def normalize_webhook_path(cls, v):
         if not isinstance(v, str):
-            return "/webhook/telegram"
+            return "/telegram"
         cleaned = v.strip()
         if not cleaned:
-            return "/webhook/telegram"
+            return "/telegram"
         if not cleaned.startswith("/"):
             cleaned = f"/{cleaned}"
         return cleaned
