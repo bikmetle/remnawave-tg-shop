@@ -18,6 +18,7 @@ class Settings(BaseSettings):
         alias="ADMIN_IDS",
         description="Comma-separated list of admin Telegram User IDs",
     )
+    POLLING_ENABLED: Optional[bool] = True
 
     POSTGRES_USER: str = Field(default="user")
     POSTGRES_PASSWORD: str = Field(default="password")
