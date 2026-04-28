@@ -300,16 +300,6 @@ async def run_bot(settings_param: Settings):
         polling_task = asyncio.create_task(dp.start_polling(bot), name="AiogramPollingTask")
         main_tasks.append(polling_task)
  
-    async def periodic_get_me():
-        while True:
-            me = await bot.get_me()
-            logging.info(f"Bot: {me.username}")
-            await asyncio.sleep(60)
-
-    main_tasks.append(
-        asyncio.create_task(periodic_get_me(), name="GetMeTask")
-    )
-
     # Recurring billing moved to panel webhook (24h before expiry). No periodic task needed here.
 
     logging.info("Starting AIOHTTP server...")
