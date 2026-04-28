@@ -111,4 +111,8 @@ async def build_and_start_web_app(
     )
 
     # Run until cancelled
-    await asyncio.Event().wait()
+    try:
+        await asyncio.Event().wait()
+    finally:
+        await web_app_runner.cleanup()
+        logging.info("AIOHTTP AppRunner cleaned up.")

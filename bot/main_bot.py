@@ -286,20 +286,29 @@ async def run_bot(settings_param: Settings):
     logging.info(f"Decision: Run AIOHTTP server: ENABLED (required for webhooks)")
     logging.info(f"--- End Bot Run Mode Decision ---")
 
-    web_app_runner = None
     main_tasks = []
-
-    if settings_param.POLLING_ENABLED:
-        logging.warning("Running in polling mode...")
-        await bot.delete_webhook(drop_pending_updates=True)
-        polling_task = asyncio.create_task(dp.start_polling(bot))
-        main_tasks.append(polling_task)
 
     # Only run AIOHTTP server for webhook mode
     async def web_server_task():
         await build_and_start_web_app(dp, bot, settings_param, local_async_session_factory)
 
     main_tasks.append(asyncio.create_task(web_server_task(), name="AIOHTTPServerTask"))
+
+    if settings_param.POLLING_ENABLED:
+        logging.warning("Running in polling mode...")
+        await bot.delete_webhook(drop_pending_updates=True)
+        polling_task = asyncio.create_task(dp.start_polling(bot), name="AiogramPollingTask")
+        main_tasks.append(polling_task)
+ 
+    async def periodic_get_me():
+        while True:
+            me = await bot.get_me()
+            logging.info(f"Bot: {me.username}")
+            await asyncio.sleep(60)
+
+    main_tasks.append(
+        asyncio.create_task(periodic_get_me(), name="GetMeTask")
+    )
 
     # Recurring billing moved to panel webhook (24h before expiry). No periodic task needed here.
 
@@ -327,15 +336,7 @@ async def run_bot(settings_param: Settings):
                         exc_info=True,
                     )
 
-        if web_app_runner:
-            await web_app_runner.cleanup()
-            logging.info("AIOHTTP AppRunner cleaned up.")
-
         await dp.emit_shutdown()
         logging.info("Dispatcher shutdown sequence emitted.")
 
         logging.info("Bot run_bot function finished.")
-
-    if settings.POLLING_ENABLED:
-        logging.info("Running in polling mode...")
-        await dp.start_polling(bot)
