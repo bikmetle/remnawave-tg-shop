@@ -18,6 +18,7 @@ class Settings(BaseSettings):
         alias="ADMIN_IDS",
         description="Comma-separated list of admin Telegram User IDs",
     )
+    POLLING_ENABLED: Optional[bool] = True
 
     POSTGRES_USER: str = Field(default="user")
     POSTGRES_PASSWORD: str = Field(default="password")
@@ -95,7 +96,7 @@ class Settings(BaseSettings):
         description="Receipt item name for traffic packages. Use {gb} placeholder for traffic amount.",
     )
 
-    WEBHOOK_BASE_URL: Optional[str] = None
+    WEBHOOK_BASE_URL: str
     TELEGRAM_WEBHOOK_PATH: str = Field(
         default="/telegram",
         description="Relative path for Telegram webhook endpoint",
